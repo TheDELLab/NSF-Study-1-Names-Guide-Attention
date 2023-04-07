@@ -1,6 +1,10 @@
 import time
 import csv
-from psychopy import visual, event, core
+from psychopy import visual, event, core, sound
+
+# for animation coordinates
+import numpy as np
+from scipy.interpolate import make_interp_spline
 
 # circular list
 from itertools import cycle
@@ -12,195 +16,93 @@ import pandas as pd
 from random import choice
 
 
-# ANIMATION VARIATION SUBROUTINES
-
-def lbc_rtc(win):
-    # LEFT BOTTOM CORNER TO RIGHT TOP CORNER 
-    # Set the starting position of the plane
-
-    # Define the list of images to use
-    image_list = ['plane.png', 'bird.png', 'superhero.png']
-    #image_list = cycle(image_list)
-
-    plane = visual.ImageStim(win, image= choice(image_list))
-    plane.setPos([-1, -1])
-
-
-    # Animation loop
-    start_time = time.time()
-    while time.time() - start_time < 2:
-        # Update the position of the plane
-        plane.setPos([plane.pos[0]+0.01, plane.pos[1]+0.01])
-        
-        # Check if the plane has reached the right edge of the screen
-        if plane.pos[0] > 1:
-            # If so, set the position back to the left edge
-            plane.setPos([1, 1])
-        
-        # Draw the plane
-        plane.draw()
-        
-        # Flip the screen to update the display
-        win.flip()
-
-def lc_rc(win):
-    # LEFT MOST CORNER TO RIGHT MOST CORNER
-    # Set the starting position of the plane
-
-    image_list = ['plane.png', 'bird.png', 'superhero.png']
-    #image_list = cycle(image_list)
-
-    plane = visual.ImageStim(win, image=choice(image_list))
-    plane.setPos([-1, 0])
-
-
-    # Animation loop
-    start_time = time.time()
-    while plane.pos[0] < 1:
-        # Update the position of the plane
-        plane.setPos([plane.pos[0]+0.01, plane.pos[1]])
-        
-        # Check if the plane has reached the rightmost edge of the screen
-        if plane.pos[0] > 1:
-            # If so, stop updating its position
-            break
-        
-        # Draw the plane
-        plane.draw()
-        
-        # Flip the screen to update the display
-        win.flip()
-
-def ltc_rbc(win):
-    # LEFT TOP CORNER TO RIGHT BOTTOM CORNER 
-    # Set the starting position of the plane
-    image_list = ['plane.png', 'bird.png', 'superhero.png']
-    #image_list = cycle(image_list)
-
-    plane = visual.ImageStim(win, image=choice(image_list))
-
-    plane.setPos([-1, 1])
-
-
-    # Animation loop
-    start_time = time.time()
-    while plane.pos[0] < 1 or plane.pos[1] > -1:
-        # Update the position of the plane
-        plane.setPos([plane.pos[0]+0.01, plane.pos[1]-0.01])
-        
-        # Check if the plane has reached the right bottom corner of the screen
-        if plane.pos[0] > 1 and plane.pos[1] < -1:
-            # If so, stop updating its position
-            break
-        
-        # Draw the plane
-        plane.draw()
-        
-        # Flip the screen to update the display
-        win.flip()
-
-def rbc_ltc(win, inverse=True):
-    # RIGHT BOTTOM CORNER 
-
-    image_inverse_list = ['plane-inverse.png', 'bird-inverse.png', 'superhero-inverse.png']
-    #image_inverse_list = cycle(image_inverse_list)
-
+def animation_screen(win, orientation,imgs):
     
-    if inverse:
-        plane = visual.ImageStim(win, image=choice(image_inverse_list))
-        
-        # Set the starting position of the plane
-        plane.setPos([1, -1])
+    if orientation == 'normal':
+        # Generate random x and y coordinates
+        #    x = np.sort(np.random.rand(15))
+        #    y = np.random.rand(15)
+        x = np.linspace(0, 0.2*np.pi, 10)
+        y = np.random.rand(10)
 
+        # Add some noise to the y coordinates
+        y += np.random.normal(scale=0.05, size=y.shape)
 
-        # Animation loop
-        start_time = time.time()
-        while plane.pos[0] > -1 and plane.pos[1] < 1:
-            # Update the position of the plane
-            plane.setPos([plane.pos[0]-0.01, plane.pos[1]+0.01])
+        # Create the interpolation object
+        spline = make_interp_spline(x, y)
             
-            # Check if the plane has reached the left top corner of the screen
-            if plane.pos[0] < -1 and plane.pos[1] > 1:
-                # If so, stop updating its position
-                break
-            
-            # Draw the plane
-            plane.draw()
-            
-            # Flip the screen to update the display
+
+        # Initialize PsychoPy window and image stimulus
+        #win = visual.Window(units="pix", fullscr=True, color=(1,1,1))
+        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+
+        # Set starting position of the plane
+        x_pos = -960  # left edge of the screen
+        y_pos = spline(x.min()) * 900 - 500
+        image.pos = [x_pos, y_pos]
+
+        # Loop through the spline points and move the image stimulus
+        for t in np.linspace(x.min(), x.max(), num=1000):
+            x_pos = t * win.size[0] - 1100  # adjust x_pos calculation
+            y_pos = spline(t) * 900 - 500
+            image.pos = [x_pos, y_pos]
+            image.draw()
             win.flip()
-
-def rtc_lbc(win, inverse=True):
-    # RIGHT TOP CORNER TO LEFT BOTTOM CORNER
-    # Create a plane stimulus
-    image_inverse_list = ['plane-inverse.png', 'bird-inverse.png', 'superhero-inverse.png']
-    #image_inverse_list = cycle(image_inverse_list)
-
-    
-    if inverse:
-        plane = visual.ImageStim(win, image=choice(image_inverse_list))
-
-        # Set the starting position of the plane
-        plane.setPos([1, 1])
-
-
-        # Animation loop
-        start_time = time.time()
-        while plane.pos[0] > -1 and plane.pos[1] > -1:
-            # Update the position of the plane
-            plane.setPos([plane.pos[0]-0.01, plane.pos[1]-0.01])
-            
-            # Check if the plane has reached the left bottom corner of the screen
-            if plane.pos[0] < -1 and plane.pos[1] < -1:
-                # If so, stop updating its position
+            if x_pos > 960:  # check if plane has reached right end of screen
                 break
-            
-            # Draw the plane
-            plane.draw()
-            
-            # Flip the screen to update the display
+
+    elif orientation == 'reverse':
+        # Generate random x and y coordinates
+        x = np.linspace(0, 0.2*np.pi, 10)
+        y = np.random.rand(10)
+
+        # Add some noise to the y coordinates
+        y += np.random.normal(scale=0.05, size=y.shape)
+
+        # Reverse the order of the x and y arrays
+
+        x = x[::-1]
+        y = y[::-1]
+
+        # Sort the x and y coordinates
+        #sort_idx = np.argsort(x)
+        #x = x[sort_idx]
+        #y = y[sort_idx]
+        # Create the interpolation object
+        x = np.sort(x)
+        spline = make_interp_spline(x, y)
+
+        # Initialize PsychoPy window and image stimulus
+        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+
+        # Set starting position of the plane
+        x_pos = 960  # right edge of the screen
+        y_pos = spline(x.max()) * 1200 - 500
+        image.pos = [x_pos, y_pos]
+
+        # Loop through the spline points and move the image stimulus
+        for t in np.linspace(x.min(), x.max(), num=1000):
+            x_pos = 960 - (t * win.size[0] - 200)  # adjust x_pos calculation
+            y_pos = spline(t) * 900 - 500
+            image.pos = [x_pos, y_pos]
+            image.draw()
             win.flip()
-
-def rc_lc(win, inverse=True):
-
-    # RIGHT MOST CORNER TO LEFT MOST CORNER 
-    image_inverse_list = ['plane-inverse.png', 'bird-inverse.png', 'superhero-inverse.png']
-    #image_inverse_list = cycle(image_inverse_list)
-
-    
-    if inverse:
-        plane = visual.ImageStim(win, image=choice(image_inverse_list))
-
-        # Set the starting position of the plane
-        plane.setPos([1, 0])
+        #    if x_pos < -960:  # check if plane has reached left end of screen
+        #        break
 
 
-        # Animation loop
-        start_time = time.time()
-        while plane.pos[0] > -1:
-            # Update the position of the plane
-            plane.setPos([plane.pos[0]-0.01, plane.pos[1]])
-            
-            # Check if the plane has reached the leftmost edge of the screen
-            if plane.pos[0] < -1:
-                # If so, stop updating its position
-                break
-            
-            # Draw the plane
-            plane.draw()
-            
-            # Flip the screen to update the display
-            win.flip()
+orientation_list = ["normal","reverse"]
+
+imgs_n = ["sun.png","balloon.png","dog.png","bird.png","plane.png","superhero.png"]
+imgs_r = ["sun.png","balloon.png","dog.png","bird-inverse.png","plane-inverse.png","superhero-inverse.png"]
+
+imgs_n = cycle(imgs_n)
+imgs_r = cycle(imgs_r)
 
 
-    # Create a window to display the stimuli
-win = visual.Window(fullscr=True, color=(1, 1, 1))
+# Create a window to display the stimuli
+win = visual.Window(fullscr=True, units='pix', color=(1, 1, 1))
 
-
-
-# LIST OF ANIMATION SUBROUTINES
-anime_variations = [lbc_rtc, lc_rc, ltc_rbc, rbc_ltc,rtc_lbc,rc_lc]
-anime_variations = cycle(anime_variations)
 
 # Create a list to store the data for each trial
 trials_data = []
@@ -209,24 +111,24 @@ trials_data = []
 conditions = pd.read_csv("Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
 cond_1 = conditions[conditions['Conditions']==1]
 trial_range = cond_1['Trials'] # Trial range - 0 to 9
+
 for trial in trial_range:
+    
+    
     # Create the stimuli
-    doll = visual.ImageStim(win, image='Cookie-Monster-smaller.png',pos=(0,0.5))
-    number = visual.TextStim(win, text=cond_1.loc[trial, 'Target'], color='black', height=0.35)
+    doll = visual.ImageStim(win, image='Cookie-Monster-smaller.png',pos=(0,300))
+    number = visual.TextStim(win, text=cond_1.loc[trial, 'Target'], color='black', height=100)
 
     # THE AUDIO STIMULUS GOES HERE
     '''
         CONDITION: 1 - Number Names.
         CONDITION: 2 - Sentences aimed to improve attention.
     '''
-    # plane stimulus
-    #plane = visual.ImageStim(win, image=next(image_list))
-    #plane.setPos([-1, -1])
+    audio = sound.Sound("twenty-three-trim.wav") # Instantiation
+   
 
-
-
-    left_number = visual.TextStim(win, text=cond_1.loc[trial, 'Target'], color='black', height=0.35, pos=(-0.3, 0))
-    right_number = visual.TextStim(win, text=cond_1.loc[trial, 'Foil'], color='black', height=0.35, pos=(0.3, 0))
+    left_number = visual.TextStim(win, text=cond_1.loc[trial, 'Target'], color='black', height=100, pos=(-300, 0))
+    right_number = visual.TextStim(win, text=cond_1.loc[trial, 'Foil'], color='black', height=100, pos=(300, 0))
 
     # Display the doll
     doll.draw()
@@ -238,13 +140,22 @@ for trial in trial_range:
     # Display the target number
     number.draw()
     win.flip()
+    
+    # Play audio stimulus
+    audio.play()
+    
+    # Wait for audio to finish playing
+    core.wait(audio.getDuration())
 
     # Wait for 3 seconds
     time.sleep(3)
 
     # Animate the plane
-    animate = next(anime_variations)
-    animate(win)
+    orientation = choice(orientation_list)
+    if orientation == 'normal':
+        animation_screen(win, orientation, imgs_n)
+    elif orientation == 'reverse':
+        animation_screen(win, orientation, imgs_r )
 
 
 
@@ -298,6 +209,9 @@ for trial in trial_range:
                     'response_key': response_key,
                     'response_time': response_time}
     trials_data.append(trial_data)
+    
+    
+
 
 # Write the data to a CSV file
 with open('data_condition_2.csv', 'w', newline='') as csvfile:

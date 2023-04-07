@@ -70,12 +70,12 @@ dummy_mode = False
 full_screen = True
 
 # Store the parameters of all trials in a list, [condition, image]
-trials = [
-    ['mask', 'img_1.jpg'],
-    ['mask', 'img_2.jpg'],
-    ['window', 'img_1.jpg'],
-    ['window', 'img_2.jpg'],
-    ]
+# trials = [
+#     ['mask', 'img_1.jpg'],
+#     ['mask', 'img_2.jpg'],
+#     ['window', 'img_1.jpg'],
+#     ['window', 'img_2.jpg'],
+#     ]
 
 # Set up EDF data file name and local data folder
 #
@@ -398,9 +398,7 @@ def abort_trial():
     return pylink.TRIAL_ERROR
 
 
-
-
-def run_trial(trial_pars, trial_index):
+def run_trial():
     """ Helper function specifying the events that will occur in a single trial
 
     trial_pars - a list containing trial parameters, e.g.,
@@ -409,65 +407,263 @@ def run_trial(trial_pars, trial_index):
     """
 
     # unpacking the trial parameters
-    cond, pic = trial_pars
+    #cond, pic = trial_pars
 
-    # create a PsychoPy window
-    win = visual.Window(fullscr=True, allowGUI=False, color=(0,0,0))
+    # disable the GC window at the beginning of each trial
+    gaze_window.enabled = False
 
-    # load the image to display
-    img = visual.ImageStim(win, image='images/' + pic)
+    # load the image to display, here we stretch the image to fill full screen
+    img = visual.ImageStim(win,image='example.png',)
+    text = visual.TextStim(win, text='Gaze on image!', pos=(0, -200), color='white')
+                           
+                           
+    # get a reference to the currently active EyeLink connection
+    el_tracker = pylink.getEYELINK()
 
-    # create a gaze-contingent window
-    gaze_window = visual.GratingStim(win, tex="none", mask="circle", size=1000,
-                                      pos=(0,0), color="green")
+    # put the tracker in the offline mode first
+    el_tracker.setOfflineMode()
 
-    # show the image and gaze-contingent window
+    # clear the host screen before we draw the backdrop
+    el_tracker.sendCommand('clear_screen 0')
+
+    # show a backdrop image on the Host screen, imageBackdrop() the recommended
+    # function, if you do not need to scale the image on the Host
+    # parameters: image_file, crop_x, crop_y, crop_width, crop_height,
+    #             x, y on the Host, drawing options
+##    el_tracker.imageBackdrop(os.path.join('images', pic),
+##                             0, 0, scn_width, scn_height, 0, 0,
+##                             pylink.BX_MAXCONTRAST)
+
+    # If you need to scale the backdrop image on the Host, use the old Pylink
+    # bitmapBackdrop(), which requires an additional step of converting the
+    # image pixels into a recognizable format by the Host PC.
+    # pixels = [line1, ...lineH], line = [pix1,...pixW], pix=(R,G,B)
+    #
+    # the bitmapBackdrop() command takes time to return, not recommended
+    # for tasks where the ITI matters, e.g., in an event-related fMRI task
+    # parameters: width, height, pixel, crop_x, crop_y,
+    #             crop_width, crop_height, x, y on the Host, drawing options
+    #
+    # Use the code commented below to convert the image and send the backdrop
+
+    # HOST BACKDROP
+    # im = Image.open('images' + os.sep + pic)  # read image with PIL
+    # im = im.resize((scn_width, scn_height))
+    # img_pixels = im.load()  # access the pixel data of the image
+    # pixels = [[img_pixels[i, j] for i in range(scn_width)]
+    #           for j in range(scn_height)]
+    # el_tracker.bitmapBackdrop(scn_width, scn_height, pixels,
+    #                           0, 0, scn_width, scn_height,
+    #                           0, 0, pylink.BX_MAXCONTRAST)
+
+    # OPTIONAL: draw landmarks and texts on the Host screen
+    # In addition to backdrop image, You may draw simples on the Host PC to use
+    # as landmarks. For illustration purpose, here we draw some texts and a box
+    # For a list of supported draw commands, see the "COMMANDS.INI" file on the
+    # Host PC (under /elcl/exe)
+    left = int(scn_width/2.0) - 60
+    top = int(scn_height/2.0) - 60
+    right = int(scn_width/2.0) + 60
+    bottom = int(scn_height/2.0) + 60
+    draw_cmd = 'draw_filled_box %d %d %d %d 1' % (left, top, right, bottom)
+    el_tracker.sendCommand(draw_cmd)
+    # send a "TRIALID" message to mark the start of a trial, see Data
+    # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
+    el_tracker.sendMessage('TRIALID %d' % '0')
+
+    # record_status_message : show some info on the Host PC
+    # here we show how many trial has been tested
+    status_msg = 'TRIAL number %d' % '0'
+    el_tracker.sendCommand("record_status_message '%s'" % status_msg)
+
+    # drift check
+    # we recommend drift-check at the beginning of each trial
+    # the doDriftCorrect() function requires target position in integers
+    # the last two arguments:
+    # draw_target (1-default, 0-draw the target then call doDriftCorrect)
+    # allow_setup (1-press ESCAPE to recalibrate, 0-not allowed)
+    #
+    # Skip drift-check if running the script in Dummy Mode
+    while not dummy_mode:
+        # terminate the task if no longer connected to the tracker or
+        # user pressed Ctrl-C to terminate the task
+        if (not el_tracker.isConnected()) or el_tracker.breakPressed():
+            terminate_task()
+            return pylink.ABORT_EXPT
+
+        # drift-check and re-do camera setup if ESCAPE is pressed
+        try:
+            error = el_tracker.doDriftCorrect(int(scn_width/2.0),
+                                              int(scn_height/2.0), 1, 1)
+            # break following a success drift-check
+            if error is not pylink.ESC_KEY:
+                break
+        except:
+            pass
+
+    # put tracker in idle/offline mode before recording
+    el_tracker.setOfflineMode()
+
+    # Start recording
+    # arguments: sample_to_file, events_to_file, sample_over_link,
+    # event_over_link (1-yes, 0-no)
+    try:
+        el_tracker.startRecording(1, 1, 1, 1)
+    except RuntimeError as error:
+        print("ERROR:", error)
+        abort_trial()
+        return pylink.TRIAL_ERROR
+
+    # Allocate some time for the tracker to cache some samples
+    pylink.pumpDelay(100)
+
+    # determine which eye(s) is/are available
+    # 0-left, 1-right, 2-binocular
+    eye_used = el_tracker.eyeAvailable()
+    if eye_used == 1:
+        el_tracker.sendMessage("EYE_USED 1 RIGHT")
+    elif eye_used == 0 or eye_used == 2:
+        el_tracker.sendMessage("EYE_USED 0 LEFT")
+        eye_used = 0
+    else:
+        print("ERROR: Could not get eye information!")
+        abort_trial()
+        return pylink.TRIAL_ERROR
+
+    # # invert the gaze-contingent window in the 'mask' condition
+    # if cond == 'mask':
+    #     gaze_window.inverted = True
+    # else:
+    #     gaze_window.inverted = False
+
+    # enable the window
+    gaze_window.enabled = True
+
+    # show the image, and log a message to mark the onset of the image
+    clear_screen(win)
     img.draw()
-    gaze_window.draw()
     win.flip()
+    el_tracker.sendMessage('image_onset')
+    img_onset_time = core.getTime()  # record the image onset time
 
-    # wait for gaze to be within gaze-contingent window for 3 seconds
-    gaze_time = core.getTime()
-    while core.getTime() - gaze_time < 3:
-        # get gaze position
-        gaze_pos = el_tracker.getNewestSample().getLeftEye().getGaze()
+    # Send a message to clear the Data Viewer screen, get it ready for
+    # drawing the pictures during visualization
+    bgcolor_RGB = (116, 116, 116)
+    el_tracker.sendMessage('!V CLEAR %d %d %d' % bgcolor_RGB)
 
-        # check if gaze is within gaze-contingent window
-        if gaze_window.contains(gaze_pos):
-            # change text color to green to indicate gaze is correct
-            gaze_text.color = "green"
+    # send over a message to specify where the image is stored relative
+    # to the EDF data file, see Data Viewer User Manual, "Protocol for
+    # EyeLink Data to Viewer Integration"
+    bg_image = './example.png'
+    imgload_msg = '!V IMGLOAD CENTER %s %d %d %d %d' % (bg_image,
+                                                        int(scn_width/2.0),
+                                                        int(scn_height/2.0),
+                                                        int(scn_width),
+                                                        int(scn_height))
+    el_tracker.sendMessage(imgload_msg)
+
+    # send interest area messages to record in the EDF data file
+    # here we draw a rectangular IA, for illustration purposes
+    # format: !V IAREA RECTANGLE <id> <left> <top> <right> <bottom> [label]
+    # for all supported interest area commands, see the Data Viewer Manual,
+    # "Protocol for EyeLink Data to Viewer Integration"
+    left = int(scn_width/2.0) - 50
+    top = int(scn_height/2.0) - 50
+    right = int(scn_width/2.0) + 50
+    bottom = int(scn_height/2.0) + 50
+    ia_pars = (1, left, top, right, bottom, 'screen_center')
+    el_tracker.sendMessage('!V IAREA RECTANGLE %d %d %d %d %d %s' % ia_pars)
+
+    # show the image for 5-secs or until the SPACEBAR is pressed
+    # move the window to follow the gaze
+    event.clearEvents()  # clear cached PsychoPy events
+    RT = -1  # keep track of the response time
+    gaze_pos = (-32768, -32768)  # initial gaze position (outside the window)
+    get_keypress = False
+    while not get_keypress:
+        # present the picture for a maximum of 5 seconds ~ changed to 100
+        if core.getTime() - img_onset_time >= 100:
+            el_tracker.sendMessage('time_out')
+            break
+
+        # abort the current trial if the tracker is no longer recording
+        error = el_tracker.isRecording()
+        if error is not pylink.TRIAL_OK:
+            el_tracker.sendMessage('tracker_disconnected')
+            abort_trial()
+            return error
+
+        # check for keyboard events
+        for keycode, modifier in event.getKeys(modifiers=True):
+            # Stop stimulus presentation when the spacebar is pressed
+            if keycode == 'space':
+                # send over a message to log the key press
+                el_tracker.sendMessage('key_pressed')
+
+                # get response time in ms, PsychoPy report time in sec
+                RT = int((core.getTime() - img_onset_time)*1000)
+                get_keypress = True
+
+            # Abort a trial if "ESCAPE" is pressed
+            if keycode == 'escape':
+                el_tracker.sendMessage('trial_skipped_by_user')
+                # clear the screen
+                clear_screen(win)
+                # abort trial
+                abort_trial()
+                return pylink.SKIP_TRIAL
+
+            # Terminate the task if Ctrl-c
+            if keycode == 'c' and (modifier['ctrl'] is True):
+                el_tracker.sendMessage('terminated_by_user')
+                terminate_task()
+                return pylink.ABORT_EXPT
+
+        # grab the newest sample
+        dt = el_tracker.getNewestSample()
+        if dt is None:  # no sample data
+            gaze_pos = (-32768, -32768)
         else:
-            # change text color to red to indicate gaze is incorrect
-            gaze_text.color = "red"
+            if eye_used == 1 and dt.isRightSample():
+                gaze_pos = dt.getRightEye().getGaze()
+            elif eye_used == 0 and dt.isLeftSample():
+                gaze_pos = dt.getLeftEye().getGaze()
 
-        # draw gaze-contingent window and text
-        gaze_window.draw()
-        gaze_text.draw()
-        win.flip()
+            # update the window position and redraw the screen
+            gaze_window.pos = (int(gaze_pos[0]-scn_width/2.0),
+                            int(scn_height/2.0-gaze_pos[1]))
+            img.draw()
+            if gaze_pos[0] >= img.pos[0]-img.size[0]/2 and gaze_pos[0] <= img.pos[0]+img.size[0]/2 and gaze_pos[1] >= img.pos[1]-img.size[1]/2 and gaze_pos[1] <= img.pos[1]+img.size[1]/2:
+                text.draw()
+            win.flip()
 
-    # show text indicating that gaze is correct
-    gaze_text = visual.TextStim(win, text="Gaze is correct", color="green")
-    gaze_text.draw()
-    win.flip()
+            # Send the current position of the gaze_contingent window
+            # to the tracker to record in the EDF data file
+            win_pos = (int(gaze_pos[0]), int(gaze_pos[1]))
+            el_tracker.sendMessage('gc_pos %d %d' % win_pos)
 
-    # wait for 1 second
-    core.wait(1)
+    # clear the screen
+    clear_screen(win)
+    el_tracker.sendMessage('blank_screen')
+    # send a message to clear the Data Viewer screen as well
+    el_tracker.sendMessage('!V CLEAR 128 128 128')
 
-    # close the window
-    win.close()
+    # stop recording; add 100 msec to catch final events before stopping
+    pylink.pumpDelay(100)
+    el_tracker.stopRecording()
 
-    # record trial variables to the EDF data file
+    # record trial variables to the EDF data file, for details, see Data
+    # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
     el_tracker.sendMessage('!V TRIAL_VAR condition %s' % cond)
     el_tracker.sendMessage('!V TRIAL_VAR image %s' % pic)
+    el_tracker.sendMessage('!V TRIAL_VAR RT %d' % RT)
 
-    # send a 'TRIAL_RESULT' message to mark the end of trial
+    # send a 'TRIAL_RESULT' message to mark the end of trial, see Data
+    # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
     el_tracker.sendMessage('TRIAL_RESULT %d' % pylink.TRIAL_OK)
 
     # disable the GC window, so it won't mask subsequent graphics
     gaze_window.enabled = False
-
-
-
 
 
 # Step 5: Set up the camera and calibrate the tracker
@@ -496,16 +692,23 @@ else:
 
 # Step 6: Run the experimental trials, index all the trials
 
+# # TRIALS TEMPLATE
+# trials = [
+#     ['mask', 'img_1.jpg'],
+#     ['mask', 'img_2.jpg'],
+#     ['window', 'img_1.jpg'],
+#     ['window', 'img_2.jpg'],
+#     ]
+
+
 # construct a list of 4 trials
-test_list = trials[:]*1
 
-# randomize the trial list
-random.shuffle(test_list)
+run_trial()
 
-trial_index = 1
+# # randomize the trial list
+# random.shuffle(test_list)
 
-for trial_pars in test_list:
-    print(trial_pars)
+# trial_index = 1
 # for trial_pars in test_list:
 #     run_trial(trial_pars, trial_index)
 #     trial_index += 1
