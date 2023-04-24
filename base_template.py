@@ -109,26 +109,33 @@ trials_data = []
 
 # Read in the conditions from the CSV file
 conditions = pd.read_csv("Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
-cond_1 = conditions[conditions['Conditions']==1]
-trial_range = cond_1['Trials'] # Trial range - 0 to 9
+CONDITION_NUM = 2 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
+cond = conditions[conditions['Conditions']==CONDITION_NUM] 
+cond = cond.reset_index(drop=True)
+trial_range = cond['Trials'] # Trial range - 0 to 9
 
 for trial in trial_range:
     
-    
     # Create the stimuli
     doll = visual.ImageStim(win, image='Cookie-Monster-smaller.png',pos=(0,300))
-    number = visual.TextStim(win, text=cond_1.loc[trial, 'Target'], color='black', height=100)
+    number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=100)
 
     # THE AUDIO STIMULUS GOES HERE
     '''
         CONDITION: 1 - Number Names.
         CONDITION: 2 - Sentences aimed to improve attention.
     '''
-    audio = sound.Sound("twenty-three-trim.wav") # Instantiation
+    
+    if CONDITION_NUM == 1:
+        audio = sound.Sound("twenty-three-trim.wav") # Instantiation
+    else:
+        pass
+        # OTHER AUDIO
+        audio = sound.Sound("twenty-three-trim.wav") # Instantiation
    
 
-    left_number = visual.TextStim(win, text=cond_1.loc[trial, 'Target'], color='black', height=100, pos=(-300, 0))
-    right_number = visual.TextStim(win, text=cond_1.loc[trial, 'Foil'], color='black', height=100, pos=(300, 0))
+    left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=100, pos=(-300, 0))
+    right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=100, pos=(300, 0))
 
     # Display the doll
     doll.draw()
@@ -140,7 +147,7 @@ for trial in trial_range:
     # Display the target number
     number.draw()
     win.flip()
-    
+        
     # Play audio stimulus
     audio.play()
     
@@ -204,7 +211,7 @@ for trial in trial_range:
         win.flip()
 
     # Record the trial data
-    trial_data = {'target_number': cond_1.loc[trial, 'Target'],
+    trial_data = {'target_number': cond.loc[trial, 'Target'],
                     'foil': cond_1.loc[trial, 'Foil'],
                     'response_key': response_key,
                     'response_time': response_time}

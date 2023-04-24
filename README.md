@@ -2,7 +2,21 @@
 
 ---
 
+**Base Psychopy.**
+
 ```bash
-run the loop_trial.py to check the latest developments.
+For Experiment without Eyelink Integration run `experiment.py` under Without Eyelink Directory
 ```
+
+
+
+**Eyelink1000 plus & Gaze Contingent**
+
+```bash
+For Experiment with Eyelink Integration run `experiment.py` under With Eyelink Directory ~ Under development. 
+```
+
+
+
+---
 

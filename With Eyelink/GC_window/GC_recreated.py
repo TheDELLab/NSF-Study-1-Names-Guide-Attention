@@ -634,6 +634,7 @@ def run_trial():
                             int(scn_height/2.0-gaze_pos[1]))
             img.draw()
             if gaze_pos[0] >= img.pos[0]-img.size[0]/2 and gaze_pos[0] <= img.pos[0]+img.size[0]/2 and gaze_pos[1] >= img.pos[1]-img.size[1]/2 and gaze_pos[1] <= img.pos[1]+img.size[1]/2:
+                print("inside if conditional, Gaze is On!")
                 text.draw()
             win.flip()
 
