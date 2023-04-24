@@ -13,7 +13,7 @@ For Experiment without Eyelink Integration run `experiment.py` under Without Eye
 **Eyelink1000 plus & Gaze Contingent**
 
 ```bash
-For Experiment with Eyelink Integration run `experiment.py` under With Eyelink Directory ~ Under development. 
+  Under development. 
 ```
 
 
