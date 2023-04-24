@@ -42,7 +42,7 @@ def animation_screen(win, orientation,imgs):
         image.pos = [x_pos, y_pos]
 
         # Loop through the spline points and move the image stimulus
-        for t in np.linspace(x.min(), x.max(), num=1000):
+        for t in np.linspace(x.min(), x.max(), num=700):
             x_pos = t * win.size[0] - 1100  # adjust x_pos calculation
             y_pos = spline(t) * 900 - 500
             image.pos = [x_pos, y_pos]
@@ -81,7 +81,7 @@ def animation_screen(win, orientation,imgs):
         image.pos = [x_pos, y_pos]
 
         # Loop through the spline points and move the image stimulus
-        for t in np.linspace(x.min(), x.max(), num=1000):
+        for t in np.linspace(x.min(), x.max(), num=700):
             x_pos = 960 - (t * win.size[0] - 200)  # adjust x_pos calculation
             y_pos = spline(t) * 900 - 500
             image.pos = [x_pos, y_pos]
@@ -118,7 +118,7 @@ for trial in trial_range:
     
     # Create the stimuli
     doll = visual.ImageStim(win, image='Cookie-Monster-smaller.png',pos=(0,300))
-    number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=100)
+    number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=600, pos=(0, 0) )
 
     # THE AUDIO STIMULUS GOES HERE
     '''
@@ -134,8 +134,8 @@ for trial in trial_range:
         audio = sound.Sound("twenty-three-trim.wav") # Instantiation
    
 
-    left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=100, pos=(-300, 0))
-    right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=100, pos=(300, 0))
+    left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=250, pos=(-400, 0))
+    right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=250, pos=(400, 0))
 
     # Display the doll
     doll.draw()
