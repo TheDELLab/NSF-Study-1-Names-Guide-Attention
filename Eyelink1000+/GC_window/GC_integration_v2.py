@@ -141,8 +141,6 @@ def animation_screen(win, orientation,imgs):
 
 
 
-
-
 # Switch to the script folder
 script_path = os.path.dirname(sys.argv[0])
 if len(script_path) != 0:
