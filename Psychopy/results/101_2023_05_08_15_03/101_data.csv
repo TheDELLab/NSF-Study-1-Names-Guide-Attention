@@ -1,0 +1,6 @@
+trail_id,condition,num_presentation_type,audio_presentation_context,target_number,foil,response_key,response_time
+0,2,decade_digit_swap,Look at this number.,35,53,right,0.523
+7,2,hundred_decade_swap,Here is a number.,492,942,left,0.77
+4,2,decade_digit_swap,Remember this. ,94,49,left,1.09
+5,2,decade_digit_swap,Look at this number.,154,145,left,1.157
+3,2,decade_digit_swap,Remember this number,76,67,left,0.756
