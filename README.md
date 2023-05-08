@@ -5,7 +5,7 @@
 **Base Psychopy.**
 
 ```bash
-For Experiment without Eyelink Integration run `experiment.py` under Without Eyelink Directory
+For Experiment without Eyelink Integration run `experiment.py` under Psychopy Directory
 ```
 
 
