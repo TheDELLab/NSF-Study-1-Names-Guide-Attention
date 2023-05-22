@@ -501,6 +501,8 @@ def run_trial(trial_range, cond):
     trial_index - record the order of trial presentation in the task
     """
 
+    trials_data = []
+
     # unpacking the trial parameters
     #cond, pic = trial_pars
 
@@ -758,11 +760,20 @@ def run_trial(trial_range, cond):
                     # Show Original Number
                     number.draw()
                     win.flip()
-                    
+
                     # AUDIO STIMULUS GOES HERE
-                    # CODE
-                    
-                    # PLANE ANIMATION GOES HERE
+                    if CONDITION_NUM == 1:
+                        audio = sound.Sound("./audio/twenty-three-trim.wav") # Instantiation
+                    else:
+                        pass
+                        # OTHER AUDIO
+                        audio = sound.Sound("./audio/twenty-three-trim.wav") # Instantiation
+
+                    # Play audio stimulus
+                    audio.play()
+
+                    # Wait for audio to finish playing
+                    core.wait(audio.getDuration())
                     
                     # Wait for 3 seconds
                     time.sleep(3)
@@ -773,7 +784,8 @@ def run_trial(trial_range, cond):
                         animation_screen(win, orientation, imgs_n)
                     elif orientation == 'reverse':
                         animation_screen(win, orientation, imgs_r )
-
+                    
+                   
             
                     # Wait for 3 seconds
                     time.sleep(3)
@@ -811,6 +823,18 @@ def run_trial(trial_range, cond):
                         win.flip()
 
                     
+                    trial_data = {
+                    
+                    'trail_id': trial,
+                    'condition': CONDITION_NUM,
+                    'num_presentation_type': cond.loc[trial, 'Number_type'],
+                    'audio_presentation_context': cond.loc[trial, 'Audio'],
+                    'target_number': cond.loc[trial, 'Target'],
+                                    'foil': cond.loc[trial, 'Foil'],
+                                    'response_key': response_key,
+                                    'response_time': response_time
+                                    }
+                    trials_data.append(trial_data)
                 
     #            else:
     #                # hide the text stimulus
@@ -826,6 +850,15 @@ def run_trial(trial_range, cond):
                 # to the tracker to record in the EDF data file
                 win_pos = (int(gaze_pos[0]), int(gaze_pos[1]))
                 el_tracker.sendMessage('gc_pos %d %d' % win_pos)
+
+
+    # Write the data to a CSV file
+    with open(f'{session_folder}/{edf_fname}_data.csv', 'w', newline='') as csvfile:
+        fieldnames = ['trail_id', 'condition','num_presentation_type','audio_presentation_context','target_number', 'foil', 'response_key', 'response_time']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for trial_data in trials_data:
+            writer.writerow(trial_data)
 
 
 
@@ -891,10 +924,11 @@ else:
 # construct a list of 4 trials
 
 # Read in the conditions from the CSV file
-conditions = pd.read_csv("Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
-CONDITION_NUM = 1 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
+conditions = pd.read_csv("./conditions/Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
+CONDITION_NUM = 2 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
 cond = conditions[conditions['Conditions']==CONDITION_NUM] 
 cond = cond.reset_index(drop=True)
+cond = cond.sample(frac=1) # sample rows and with replacement ( Shuffles all the samples ) 
 trial_range = cond['Trials'] # Trial range - 0 to 9
 
 
@@ -902,7 +936,7 @@ trial_range = cond['Trials'] # Trial range - 0 to 9
 
 
 
-run_trial(trial_range, cond, )
+run_trial(trial_range, cond)
 
 # # randomize the trial list
 # random.shuffle(test_list)

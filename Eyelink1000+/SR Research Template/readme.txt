@@ -1,0 +1,1 @@
+copy this file into the Gaze_Contingent folder and run to check the template functionality.

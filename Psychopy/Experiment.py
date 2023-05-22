@@ -99,7 +99,6 @@ def animation_screen(win, orientation, imgs):
     scn_width -= 300
     scn_height -= 300
     
-    
     if orientation == 'normal':
         # Generate random x and y coordinates
         x = np.linspace(0, 0.2 * np.pi, 10)
