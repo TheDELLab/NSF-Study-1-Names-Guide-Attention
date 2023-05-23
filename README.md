@@ -1,4 +1,4 @@
-# psychopy-prototype
+# NSF Study 1: Names Guide Attention
 
 ---
 
@@ -13,10 +13,27 @@ For Experiment without Eyelink Integration run `experiment.py` under Psychopy Di
 **Eyelink1000 plus & Gaze Contingent**
 
 ```bash
-  Under development. 
+For Experiment with Eyelink1000+ run `GazeContingent.py` under Eyelink1000+/Gaze_Contingent Directory.
 ```
 
+#### File structure
 
+```
+.
+├── Eyelink1000+ 
+│   ├── Gaze_Contingent
+
+|    		├── GazeContingent.py  --- RUN THIS SCRIPT FOR EYELINK
+
+├── Psychopy
+│   ├── Experiment.py --- RUN THIS SCRIPT FOR BEHAVIORAL
+│   ├── audio
+│   ├── conditions
+│   ├── conditions-testing.ipynb
+│   ├── images
+│   └── results
+└── README.md
+```
 
 ---
 
