@@ -17,91 +17,14 @@ import pandas as pd
 # random
 from random import choice
 
-#
-#def animation_screen(win, orientation,imgs):
-#    
-#    if orientation == 'normal':
-#        # Generate random x and y coordinates
-#        #    x = np.sort(np.random.rand(15))
-#        #    y = np.random.rand(15)
-#        x = np.linspace(0, 0.2*np.pi, 10)
-#        y = np.random.rand(10)
-#
-#        # Add some noise to the y coordinates
-#        y += np.random.normal(scale=0.05, size=y.shape)
-#
-#        # Create the interpolation object
-#        spline = make_interp_spline(x, y)
-#            
-#
-#        # Initialize PsychoPy window and image stimulus
-#        #win = visual.Window(units="pix", fullscr=True, color=(1,1,1))
-#        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
-#
-#        # Set starting position of the plane
-#        x_pos = -960  # left edge of the screen
-#        y_pos = spline(x.min()) * 900 - 500
-#        image.pos = [x_pos, y_pos]
-#
-#        # Loop through the spline points and move the image stimulus
-#        for t in np.linspace(x.min(), x.max(), num=700):
-#            x_pos = t * win.size[0] - 1100  # adjust x_pos calculation
-#            y_pos = spline(t) * 900 - 500
-#            image.pos = [x_pos, y_pos]
-#            image.draw()
-#            win.flip()
-#            if x_pos > 960:  # check if plane has reached right end of screen
-#                break
-#
-#    elif orientation == 'reverse':
-#        # Generate random x and y coordinates
-#        x = np.linspace(0, 0.2*np.pi, 10)
-#        y = np.random.rand(10)
-#
-#        # Add some noise to the y coordinates
-#        y += np.random.normal(scale=0.05, size=y.shape)
-#
-#        # Reverse the order of the x and y arrays
-#
-#        x = x[::-1]
-#        y = y[::-1]
-#
-#        # Sort the x and y coordinates
-#        #sort_idx = np.argsort(x)
-#        #x = x[sort_idx]
-#        #y = y[sort_idx]
-#        # Create the interpolation object
-#        x = np.sort(x)
-#        spline = make_interp_spline(x, y)
-#
-#        # Initialize PsychoPy window and image stimulus
-#        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
-#
-#        # Set starting position of the plane
-#        x_pos = 960  # right edge of the screen
-#        y_pos = spline(x.max()) * 1200 - 500
-#        image.pos = [x_pos, y_pos]
-#
-#        # Loop through the spline points and move the image stimulus
-#        for t in np.linspace(x.min(), x.max(), num=700):
-#            x_pos = 960 - (t * win.size[0] - 200)  # adjust x_pos calculation
-#            y_pos = spline(t) * 900 - 500
-#            image.pos = [x_pos, y_pos]
-#            image.draw()
-#            win.flip()
-#        #    if x_pos < -960:  # check if plane has reached left end of screen
-#        #        break
-#        
 
-def animation_screen(win, orientation, imgs):
-    scn_width, scn_height = win.size
-    
-    scn_width -= 300
-    scn_height -= 300
+def animation_screen(win, orientation,imgs):
     
     if orientation == 'normal':
         # Generate random x and y coordinates
-        x = np.linspace(0, 0.2 * np.pi, 10)
+        #    x = np.sort(np.random.rand(15))
+        #    y = np.random.rand(15)
+        x = np.linspace(0, 0.2*np.pi, 10)
         y = np.random.rand(10)
 
         # Add some noise to the y coordinates
@@ -109,57 +32,134 @@ def animation_screen(win, orientation, imgs):
 
         # Create the interpolation object
         spline = make_interp_spline(x, y)
+            
 
         # Initialize PsychoPy window and image stimulus
+        #win = visual.Window(units="pix", fullscr=True, color=(1,1,1))
         image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
 
         # Set starting position of the plane
-        x_pos = -scn_width/2  # left edge of the screen
-        y_pos = spline(x.min()) * scn_height - scn_height/2
+        x_pos = -960  # left edge of the screen
+        y_pos = spline(x.min()) * 900 - 500
         image.pos = [x_pos, y_pos]
 
         # Loop through the spline points and move the image stimulus
         for t in np.linspace(x.min(), x.max(), num=700):
-            x_pos = t * scn_width - scn_width/2
-            y_pos = spline(t) * scn_height - scn_height/2
+            x_pos = t * win.size[0] - 1100  # adjust x_pos calculation
+            y_pos = spline(t) * 900 - 500
             image.pos = [x_pos, y_pos]
             image.draw()
             win.flip()
-            if x_pos > scn_width/2:  # check if image has reached right end of screen
+            if x_pos > 960:  # check if plane has reached right end of screen
                 break
 
     elif orientation == 'reverse':
         # Generate random x and y coordinates
-        x = np.linspace(0, 0.2 * np.pi, 10)
+        x = np.linspace(0, 0.2*np.pi, 10)
         y = np.random.rand(10)
 
         # Add some noise to the y coordinates
         y += np.random.normal(scale=0.05, size=y.shape)
 
         # Reverse the order of the x and y arrays
+
         x = x[::-1]
         y = y[::-1]
 
+        # Sort the x and y coordinates
+        #sort_idx = np.argsort(x)
+        #x = x[sort_idx]
+        #y = y[sort_idx]
         # Create the interpolation object
+        x = np.sort(x)
         spline = make_interp_spline(x, y)
 
         # Initialize PsychoPy window and image stimulus
         image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
 
         # Set starting position of the plane
-        x_pos = scn_width/2  # right edge of the screen
-        y_pos = spline(x.max()) * scn_height - scn_height/2
+        x_pos = 960  # right edge of the screen
+        y_pos = spline(x.max()) * 1200 - 500
         image.pos = [x_pos, y_pos]
 
         # Loop through the spline points and move the image stimulus
         for t in np.linspace(x.min(), x.max(), num=700):
-            x_pos = scn_width/2 - (t * scn_width - scn_width/2)
-            y_pos = spline(t) * scn_height - scn_height/2
+            x_pos = 960 - (t * win.size[0] - 200)  # adjust x_pos calculation
+            y_pos = spline(t) * 900 - 500
             image.pos = [x_pos, y_pos]
             image.draw()
             win.flip()
-        #    if x_pos < -scn_width/2:  # check if image has reached left end of screen
+        #    if x_pos < -960:  # check if plane has reached left end of screen
         #        break
+        
+#
+#def animation_screen(win, orientation, imgs):
+#    scn_width, scn_height = win.size
+#    
+#    scn_width -= 300
+#    scn_height -= 300
+#    
+#    if orientation == 'normal':
+#        # Generate random x and y coordinates
+#        x = np.linspace(0, 0.2 * np.pi, 10)
+#        y = np.random.rand(10)
+#
+#        # Add some noise to the y coordinates
+#        y += np.random.normal(scale=0.05, size=y.shape)
+#
+#        # Create the interpolation object
+#        spline = make_interp_spline(x, y)
+#
+#        # Initialize PsychoPy window and image stimulus
+#        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+#
+#        # Set starting position of the plane
+#        x_pos = -scn_width/2  # left edge of the screen
+#        y_pos = spline(x.min()) * scn_height - scn_height/2
+#        image.pos = [x_pos, y_pos]
+#
+#        # Loop through the spline points and move the image stimulus
+#        for t in np.linspace(x.min(), x.max(), num=700):
+#            x_pos = t * scn_width - scn_width/2
+#            y_pos = spline(t) * scn_height - scn_height/2
+#            image.pos = [x_pos, y_pos]
+#            image.draw()
+#            win.flip()
+#            if x_pos > scn_width/2:  # check if image has reached right end of screen
+#                break
+#
+#    elif orientation == 'reverse':
+#        # Generate random x and y coordinates
+#        x = np.linspace(0, 0.2 * np.pi, 10)
+#        y = np.random.rand(10)
+#
+#        # Add some noise to the y coordinates
+#        y += np.random.normal(scale=0.05, size=y.shape)
+#
+#        # Reverse the order of the x and y arrays
+#        x = x[::-1]
+#        y = y[::-1]
+#
+#        # Create the interpolation object
+#        spline = make_interp_spline(x, y)
+#
+#        # Initialize PsychoPy window and image stimulus
+#        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+#
+#        # Set starting position of the plane
+#        x_pos = scn_width/2  # right edge of the screen
+#        y_pos = spline(x.max()) * scn_height - scn_height/2
+#        image.pos = [x_pos, y_pos]
+#
+#        # Loop through the spline points and move the image stimulus
+#        for t in np.linspace(x.min(), x.max(), num=700):
+#            x_pos = scn_width/2 - (t * scn_width - scn_width/2)
+#            y_pos = spline(t) * scn_height - scn_height/2
+#            image.pos = [x_pos, y_pos]
+#            image.draw()
+#            win.flip()
+#        #    if x_pos < -scn_width/2:  # check if image has reached left end of screen
+#        #        break
 
         
 
@@ -230,21 +230,19 @@ imgs_r = cycle(imgs_r)
 win = visual.Window(fullscr=True, units='pix', color=(1, 1, 1))
 
 
-
-
-
 # Create a list to store the data for each trial
 trials_data = []
 
 # Read in the conditions from the CSV file
 conditions = pd.read_csv("./conditions/Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
-CONDITION_NUM = 2 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
+CONDITION_NUM = 1 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
 cond = conditions[conditions['Conditions']==CONDITION_NUM] 
 cond = cond.reset_index(drop=True)
 cond = cond.sample(frac=1) # sample rows and with replacement ( Shuffles all the samples ) 
-trial_range = cond['Trials'] # Trial range - 0 to 9
+trial_range = cond['Trials']# Trial range - 0 to 9
+audio = cond['Audio']
 
-for trial in trial_range[:2]:
+for trial, audio in zip(trial_range, audio):
     
     
     # Create the stimuli
@@ -257,12 +255,9 @@ for trial in trial_range[:2]:
         CONDITION: 2 - Sentences aimed to improve attention.
     '''
     
-    if CONDITION_NUM == 1:
-        audio = sound.Sound("./audio/twenty-three-trim.wav") # Instantiation
-    else:
-        pass
-        # OTHER AUDIO
-        audio = sound.Sound("./audio/twenty-three-trim.wav") # Instantiation
+    
+    audio = sound.Sound(f"./audio/{audio}.wav") # Instantiation
+   
    
 
     left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=250, pos=(-400, 0))
@@ -346,7 +341,7 @@ for trial in trial_range[:2]:
     
     trial_data = {
     
-    'trail_id': trial,
+    'trial_id': trial,
     'condition': CONDITION_NUM,
     'num_presentation_type': cond.loc[trial, 'Number_type'],
     'audio_presentation_context': cond.loc[trial, 'Audio'],
@@ -362,7 +357,7 @@ for trial in trial_range[:2]:
 
 # Write the data to a CSV file
 with open(f'{session_folder}/{file_name}_data.csv', 'w', newline='') as csvfile:
-    fieldnames = ['trail_id', 'condition','num_presentation_type','audio_presentation_context','target_number', 'foil', 'response_key', 'response_time']
+    fieldnames = ['trial_id', 'condition','num_presentation_type','audio_presentation_context','target_number', 'foil', 'response_key', 'response_time']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
     for trial_data in trials_data:
