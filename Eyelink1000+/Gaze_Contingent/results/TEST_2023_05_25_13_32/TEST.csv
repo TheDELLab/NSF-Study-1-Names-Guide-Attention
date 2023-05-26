@@ -1,0 +1,4 @@
+trail_id,condition,num_presentation_type,audio_presentation_context,target_number,foil,response_key,response_time
+7,1,hundred_decade_swap,five hundred thirty seven,537,357,left,4.787
+8,1,hundred_decade_swap,eight hundred sixty seven,867,687,right,2.893
+6,1,decade_digit_swap,two hundred forty,240,204,left,0.798

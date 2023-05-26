@@ -1,0 +1,3 @@
+trail_id,condition,num_presentation_type,audio_presentation_context,target_number,foil,response_key,response_time
+5,1,2 digits,seventy five,75,57,left,0.606
+2,1,2 digits,fourty nine,49,94,left,0.702

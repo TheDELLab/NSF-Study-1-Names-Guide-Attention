@@ -62,6 +62,8 @@ import pandas as pd
 
 # random
 from random import choice
+
+
 def animation_screen(win, orientation,imgs):
     
     if orientation == 'normal':
@@ -88,7 +90,7 @@ def animation_screen(win, orientation,imgs):
         image.pos = [x_pos, y_pos]
 
         # Loop through the spline points and move the image stimulus
-        for t in np.linspace(x.min(), x.max(), num=700):
+        for t in np.linspace(x.min(), x.max(), num=1000):
             x_pos = t * win.size[0] - 1100  # adjust x_pos calculation
             y_pos = spline(t) * 900 - 500
             image.pos = [x_pos, y_pos]
@@ -127,7 +129,7 @@ def animation_screen(win, orientation,imgs):
         image.pos = [x_pos, y_pos]
 
         # Loop through the spline points and move the image stimulus
-        for t in np.linspace(x.min(), x.max(), num=700):
+        for t in np.linspace(x.min(), x.max(), num=1000):
             x_pos = 960 - (t * win.size[0] - 200)  # adjust x_pos calculation
             y_pos = spline(t) * 900 - 500
             image.pos = [x_pos, y_pos]
@@ -491,7 +493,7 @@ def abort_trial():
     return pylink.TRIAL_ERROR
 
 
-def run_trial(trial_range, audio, cond):
+def run_trial(trial_range, cond):
     """ Helper function specifying the events that will occur in a single trial
 
     trial_pars - a list containing trial parameters, e.g.,
@@ -508,7 +510,7 @@ def run_trial(trial_range, audio, cond):
     gaze_window.enabled = False
 
     # load the image to display, here we stretch the image to fill full screen
-    img = visual.ImageStim(win, image='./images/Cookie-Monster-smaller.png')
+    img = visual.ImageStim(win,image='example.png',)
     #text = visual.TextStim(win, text='Gaze on image!', pos=(0, -200), color='white')
                            
                            
@@ -653,7 +655,7 @@ def run_trial(trial_range, audio, cond):
     # send over a message to specify where the image is stored relative
     # to the EDF data file, see Data Viewer User Manual, "Protocol for
     # EyeLink Data to Viewer Integration"
-    bg_image = './images/Cookie-Monster-smaller.png'
+    bg_image = './example.png'
     imgload_msg = '!V IMGLOAD CENTER %s %d %d %d %d' % (bg_image,
                                                         int(scn_width/2.0),
                                                         int(scn_height/2.0),
@@ -724,23 +726,19 @@ def run_trial(trial_range, audio, cond):
         
         orientation_list = ["normal","reverse"]
 
-        imgs_n = ["./images/sun.png","./images/balloon.png","./images/dog.png","./images/bird.png","./images/plane.png","./images/superhero.png"]
-        imgs_r = ["./images/sun.png","./images/balloon.png","./images/dog.png","./images/bird-inverse.png","./images/plane-inverse.png","./images/superhero-inverse.png"]
+        imgs_n = ["sun.png","balloon.png","dog.png","bird.png","plane.png","superhero.png"]
+        imgs_r = ["sun.png","balloon.png","dog.png","bird-inverse.png","plane-inverse.png","superhero-inverse.png"]
 
         imgs_n = cycle(imgs_n)
         imgs_r = cycle(imgs_r)
 
 
-        for trial, audio in zip(trial_range[:3], audio[:3]) :
+        for trial in trial_range:
            
-            
-            number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350)
-            left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=250, pos=(-400, 0))
-            right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=250, pos=(400, 0))
-            
-            # AUDIO STIMULUS GOES HERE
-            #num_audio = sound.Sound(f"./audio/{audio}.wav") # Instantiation
-   
+            number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=100)
+            left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=100, pos=(-300, 0))
+            right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=100, pos=(300, 0))
+
 
             # grab the newest sample
             dt = el_tracker.getNewestSample()
@@ -763,12 +761,19 @@ def run_trial(trial_range, audio, cond):
                     number.draw()
                     win.flip()
 
-                    
+                    # AUDIO STIMULUS GOES HERE
+                    if CONDITION_NUM == 1:
+                        audio = sound.Sound("./audio/twenty-three-trim.wav") # Instantiation
+                    else:
+                        pass
+                        # OTHER AUDIO
+                        audio = sound.Sound("./audio/twenty-three-trim.wav") # Instantiation
+
                     # Play audio stimulus
-                    #num_audio.play()
+                    audio.play()
 
                     # Wait for audio to finish playing
-                    #core.wait(num_audio.getDuration())
+                    core.wait(audio.getDuration())
                     
                     # Wait for 3 seconds
                     time.sleep(3)
@@ -830,8 +835,7 @@ def run_trial(trial_range, audio, cond):
                                     'response_time': response_time
                                     }
                     trials_data.append(trial_data)
-         
-         
+                
     #            else:
     #                # hide the text stimulus
     #                text.setAutoDraw(False)
@@ -847,13 +851,9 @@ def run_trial(trial_range, audio, cond):
                 win_pos = (int(gaze_pos[0]), int(gaze_pos[1]))
                 el_tracker.sendMessage('gc_pos %d %d' % win_pos)
 
-        
-        break
-        
-        
+
     # Write the data to a CSV file
-    filepath = os.path.join(session_folder,edf_fname+".csv")
-    with open(filepath, 'w', newline='') as csvfile:
+    with open(f'{session_folder}/{edf_fname}_data.csv', 'w', newline='') as csvfile:
         fieldnames = ['trail_id', 'condition','num_presentation_type','audio_presentation_context','target_number', 'foil', 'response_key', 'response_time']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -875,7 +875,7 @@ def run_trial(trial_range, audio, cond):
     # record trial variables to the EDF data file, for details, see Data
     # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
     el_tracker.sendMessage('!V TRIAL_VAR condition %s' % cond)
-    #el_tracker.sendMessage('!V TRIAL_VAR image %s' % pic)
+    el_tracker.sendMessage('!V TRIAL_VAR image %s' % pic)
     el_tracker.sendMessage('!V TRIAL_VAR RT %d' % RT)
 
     # send a 'TRIAL_RESULT' message to mark the end of trial, see Data
@@ -925,19 +925,18 @@ else:
 
 # Read in the conditions from the CSV file
 conditions = pd.read_csv("./conditions/Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
-CONDITION_NUM = 1 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
+CONDITION_NUM = 2 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
 cond = conditions[conditions['Conditions']==CONDITION_NUM] 
 cond = cond.reset_index(drop=True)
 cond = cond.sample(frac=1) # sample rows and with replacement ( Shuffles all the samples ) 
 trial_range = cond['Trials'] # Trial range - 0 to 9
-audio = cond['Audio']
 
 
 
 
 
 
-run_trial(trial_range, audio, cond)
+run_trial(trial_range, cond)
 
 # # randomize the trial list
 # random.shuffle(test_list)
