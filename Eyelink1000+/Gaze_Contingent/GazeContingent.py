@@ -739,7 +739,7 @@ def run_trial(trial_range, audio, cond):
             right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=250, pos=(400, 0))
             
             # AUDIO STIMULUS GOES HERE
-            #num_audio = sound.Sound(f"./audio/{audio}.wav") # Instantiation
+            num_audio = sound.Sound(f"./audio/{audio}.wav") # Instantiation
    
 
             # grab the newest sample

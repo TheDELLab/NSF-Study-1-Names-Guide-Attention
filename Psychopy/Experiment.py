@@ -235,12 +235,15 @@ trials_data = []
 
 # Read in the conditions from the CSV file
 conditions = pd.read_csv("./conditions/Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
-CONDITION_NUM = 1 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
+CONDITION_NUM = 2 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
 cond = conditions[conditions['Conditions']==CONDITION_NUM] 
 cond = cond.reset_index(drop=True)
 cond = cond.sample(frac=1) # sample rows and with replacement ( Shuffles all the samples ) 
 trial_range = cond['Trials']# Trial range - 0 to 9
 audio = cond['Audio']
+
+checkpoint_flag = 0
+iterator = 1
 
 for trial, audio in zip(trial_range, audio):
     
@@ -249,14 +252,9 @@ for trial, audio in zip(trial_range, audio):
     doll = visual.ImageStim(win, image='./images/Cookie-Monster-smaller.png',pos=(0,300))
     number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=300, pos=(-10, 0) )
 
-    # THE AUDIO STIMULUS GOES HERE
-    '''
-        CONDITION: 1 - Number Names.
-        CONDITION: 2 - Sentences aimed to improve attention.
-    '''
     
-    
-    audio = sound.Sound(f"./audio/{audio}.wav") # Instantiation
+    # Audio Instantiation
+    audio = sound.Sound(f"./audio/{audio}.wav") 
    
    
 
@@ -352,8 +350,23 @@ for trial, audio in zip(trial_range, audio):
                     }
     trials_data.append(trial_data)
     
+    if  iterator % 6 == 0: # 4 Check points and 24 Trials, so 24/4 every Sixth Trial is a check point
+        checkpoint_flag += 1 
+        checkpoint = visual.ImageStim(win, image=f'./images/checkpoint{checkpoint_flag}.png', pos=(0,0))
+        # Display the checkpoint image
+        checkpoint.draw()
+        win.flip()
+        
+        # Wait for 3 seconds
+        time.sleep(3)
+    
+    iterator += 1  
     
 
+end_message = visual.TextStim(win, text="Saving Data ...", color='black', height=20, pos=(0, 0))
+end_message.draw()
+win.flip()
+time.sleep(2)
 
 # Write the data to a CSV file
 with open(f'{session_folder}/{file_name}_data.csv', 'w', newline='') as csvfile:
