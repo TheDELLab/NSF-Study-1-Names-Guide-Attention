@@ -1,0 +1,2 @@
+trial_id,condition,num_presentation_type,audio_presentation_context,target_number,foil,response_key,response_time
+13,2,3 digits,"Look, here is a number.",569,659,escape,1.047
