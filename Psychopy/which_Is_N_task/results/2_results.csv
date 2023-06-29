@@ -1,0 +1,17 @@
+Target,Foil,Location,Audio,Response,Response Time
+8,2,left,Which is the number eight,left,3.3945758330082754
+5,15,right,Can you tell me which number is five,right,3.2089129999949364
+12,22,left,Which is number twelve,left,2.0115386660036165
+24,11,right,Please tell us which number is twenty four,right,3.7823005840036785
+85,850,left,Which number is eighty five,left,2.649871208006516
+105,125,left,Can you tell me which number is one hundred five,left,3.6938674170087324
+21,201,right,Please tell us which number is twenty one,right,3.6411091659974772
+260,206,right,Which number is two hundred sixty,right,2.5443557090038667
+36,306,left,Can you tell me which number is thirty six,left,3.4394429579988355
+350,305,left,Which is number three hundred fifty,left,3.0227506670053117
+42,402,right,Please tell us which number is forty two,right,2.9756598329986446
+604,64,left,Which number is six hundred four,left,2.252479917005985
+67,670,right,Which is number sixty seven,right,1.970841250004014
+807,78,left,Can you tell me which number eight hundred seven,left,2.7626406670024153
+100,150,right,Please tell us which number is one hundred,right,2.6894807500066236
+505,550,right,Which number is five hundred five,right,3.6679057920118794

@@ -1,4 +1,0 @@
-trial_id,condition,num_presentation_type,audio_presentation_context,other_features,target_number,foil,response_key,response_time
-14,1,3 digits,four hundred thirty eight,swap_1_3,438,834,left,1.201
-19,1,3 digits,two hundred thirty five,swap_2_3,235,253,left,7.336
-17,1,3 digits,six hundred twenty nine,swap_1_2,629,269,escape,3.727
