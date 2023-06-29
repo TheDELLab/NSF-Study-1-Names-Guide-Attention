@@ -92,7 +92,7 @@ for row in data:
         "Location": location,
         "Audio": audio_file,
         "Response": keys[0][0],  # Get the key from the response
-        "Response Time": round(keys[0][1], 3) if keys else None  # Get the response time
+        "Response Time": round(keys[0][1], 3) if keys else None  # Get the response time to 3rd decimal place
     }
     results.append(trial_results)
 
