@@ -87,6 +87,9 @@ for row in data:
     keys = event.waitKeys(keyList=['left', 'right'], timeStamped=response_timer)
 
     # blank screen in between trails
+    # Initial screen
+    pause_text = visual.TextStim(win, text="Press space to continue", color='black')
+    pause_text.draw()
     win.flip()
     core.wait(1.0)  # Adjust the duration as needed
 
