@@ -265,64 +265,199 @@ cond = cond.sample(frac=1) # sample rows and with replacement ( Shuffles all the
 trial_range = cond['Trials']# Trial range - 0 to 9
 audio = cond['Audio']
 
+# Read in the PRACTICE conditions from the CSV file
+conditionsPractice = pd.read_csv("./practiceTrials/Conditions_Practice.csv").drop('Unnamed: 0',axis=1)
+condPrac = conditionsPractice[conditionsPractice['Conditions']==CONDITION_NUM] 
+condPrac = condPrac.reset_index(drop=True)
+condPrac = condPrac.sample(frac=1) # sample rows and with replacement ( Shuffles all the samples ) 
+trial_range_practice = condPrac['Trials']# Trial range - 0 to 9
+audio_practice = condPrac['Audio']
+
 checkpoint_flag = 0
 iterator = 1
 
 
 def simulate_trial(win):
 
-    info = visual.TextStim(win, text='Press Space to Simulate a Trial or Escape to Start the Actual Experiment', pos=(0,0), height=25, color='black')
+    info = visual.TextStim(win, text='Press space bar to start the prictice trials', pos=(0,0), height=25, color='black')
     note = visual.TextStim(win, text='Which one did you see first?', pos=(0,-400), height=25, color='black')
     info.draw()
     win.flip()
 
-    control_key = event.waitKeys(keyList=['space','escape'])
+    control_key = event.waitKeys(keyList=['space', 'escape'])
 
     if control_key[0] == 'space':
-        for _ in range(2):  # Repeat the block twice
-            target_image = visual.ImageStim(win, image='./images/turtle.png', pos=(-10, 0))
-            target_left_image = visual.ImageStim(win, image='./images/turtle.png', pos=(-400, 0))
-            foil_left_image = visual.ImageStim(win, image='./images/elephant.png', pos=(400, 0))
+        
+        for trialPrac, audioPrac in zip(trial_range_practice, audio_practice):
+        
+            # Create the stimuli
+            doll = visual.ImageStim(win, image='./practiceTrials/images/Cookie-Monster-smaller.png',pos=(0,300))
+            number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=300, pos=(-10, 0) )
+        
+    
+        
+            # Audio Instantiation
+            audio_Prac = sound.Sound(f"./practiceTrials/audio/{audioPrac}.wav") 
+       
+            # Target position 
+            target_location = condPrac.loc[trialPrac,'Location']
+            if condPrac.loc[trialPrac,'Location'] == 'left':
+                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=250, pos=(-400, 0))
+                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=250, pos=(400, 0))
+            else:
+                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=250, pos=(-400, 0))
+                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=250, pos=(400, 0))
 
-            audio_folder = "./audio/turtle.wav"
-            audio = sound.Sound(audio_folder)
-
-            audio.play()
-
-            target_image.draw()
+       
+            # Display the doll
+            doll.draw()
+            info.draw()
             win.flip()
 
-            time.sleep(1)
+            # Wait for 3 seconds
+            #time.sleep(3)
+        
+            control_key = event.waitKeys(keyList=['space'])
+
+            if control_key[0] == 'space':
             
-            win.flip()  # Display a blank screen
+                #time.sleep(0.5) # Just to be ready
 
-            time.sleep(5)  # Pause for 1 second
+                # Display the target number
+                number.draw()
+                win.flip()
+                
+                # Play audio stimulus
+                audio_Prac.play()
+            
+                # Wait for audio to finish playing
+                core.wait(audio_Prac.getDuration())
 
-            target_left_image.draw()
-            foil_left_image.draw()
-            note.draw()
-            win.flip()
+                # Wait for 4 seconds
+                time.sleep(4)
 
-            time.sleep(3)
+                # Animate the plane
+                orientation = choice(orientation_list)
+                if orientation == 'normal':
+                    animation_screen(win, orientation, imgs_n)
+                elif orientation == 'reverse':
+                    animation_screen(win, orientation, imgs_r )
 
-            start_time = time.time()
-            keys = event.waitKeys(keyList=['left', 'right', 'escape'])
-            response_time = round((time.time() - start_time), 3)
-            response_key = keys[0]
 
-            if response_key == 'left':
-                duration = 2.5
-                frames_per_second = 60
-                num_frames = int(duration * frames_per_second)
-                pos_change = np.array((410, 0)) / num_frames
+                # Display the number and foil
+                left_number.draw()
+                right_number.draw()
+                win.flip()
+       
+          
+                # Wait for a key press
+                start_time = time.time()
+                keys = event.waitKeys(keyList=['left', 'right','escape'])
+                response_time = round((time.time()-start_time), 3)
+                response_key = keys[0]
+            
+            
+                # ACCURACY
+                if response_key == target_location:
+                    accuracy = 1
+                else:
+                    accuracy = 0
 
-                for frame in range(num_frames):
-                    target_left_image.pos += pos_change
-                    target_left_image.draw()
-                    foil_left_image.draw()
+
+            # --- animation sequence from here, doesn't have any prevalence on the response time recording.
+
+                # Animate the selected number
+                if response_key == 'left':
+                    selected_number = left_number
+                elif response_key == 'right':
+                    selected_number = right_number
+                elif response_key == 'escape':
+                    print('aborting')
+                
+                
+                
+                    Practice_trial_data = {
+                    
+                    'trial_id': trialPrac,
+                    'condition': CONDITION_NUM,
+                    'num_presentation_type': condPrac.loc[trialPrac, 'Number_type'],
+                    'audio_presentation_context': condPrac.loc[trialPrac, 'Audio'],
+                    'other_features': condPrac.loc[trialPrac, "Other_features"],
+                    'target_number': condPrac.loc[trialPrac, 'Target'],
+                    'foil': condPrac.loc[trialPrac, 'Foil'],
+                    'response_key': response_key,
+                    'response_time': response_time,
+                    'accuracy': accuracy,
+                                    }
+                    Practice_trial_data.append(Practice_trial_data)
+                    
+                    break
+                    
+
+                start_pos = selected_number.pos
+                end_pos = doll.pos
+
+                start_time = time.time()
+                while time.time() - start_time < 1.5:
+                    pos = [start_pos[0] + (end_pos[0] - start_pos[0]) * (time.time() - start_time) / 1.5,
+                            start_pos[1] + (end_pos[1] - start_pos[1]) * (time.time() - start_time) / 1.5]
+                    selected_number.setPos(pos)
+
+                    # Draw the doll and the selected number
+                    doll.draw()
+                    selected_number.draw()
+
+                    # Flip the screen to update the display
                     win.flip()
-    elif control_key[0] == 'escape':
-        return None
+
+            elif control_key[0] == 'escape':
+                return None
+
+
+    #     for _ in range(2):  # Repeat the block twice
+    #         target_image = visual.ImageStim(win, image='./images/turtle.png', pos=(-10, 0))
+    #         target_left_image = visual.ImageStim(win, image='./images/turtle.png', pos=(-400, 0))
+    #         foil_left_image = visual.ImageStim(win, image='./images/elephant.png', pos=(400, 0))
+
+    #         audio_folder = "./audio/turtle.wav"
+    #         audio = sound.Sound(audio_folder)
+
+    #         audio.play()
+
+    #         target_image.draw()
+    #         win.flip()
+
+    #         time.sleep(1)
+            
+    #         win.flip()  # Display a blank screen
+
+    #         time.sleep(5)  # Pause for 1 second
+
+    #         target_left_image.draw()
+    #         foil_left_image.draw()
+    #         note.draw()
+    #         win.flip()
+
+    #         time.sleep(3)
+
+    #         start_time = time.time()
+    #         keys = event.waitKeys(keyList=['left', 'right', 'escape'])
+    #         response_time = round((time.time() - start_time), 3)
+    #         response_key = keys[0]
+
+    #         if response_key == 'left':
+    #             duration = 2.5
+    #             frames_per_second = 60
+    #             num_frames = int(duration * frames_per_second)
+    #             pos_change = np.array((410, 0)) / num_frames
+
+    #             for frame in range(num_frames):
+    #                 target_left_image.pos += pos_change
+    #                 target_left_image.draw()
+    #                 foil_left_image.draw()
+    #                 win.flip()
+    # elif control_key[0] == 'escape':
+    #     return None
 
 
 simulate_trial(win)

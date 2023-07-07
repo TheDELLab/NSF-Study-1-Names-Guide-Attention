@@ -3,8 +3,8 @@ import csv
 import os
 
 # Show dialog to input participant ID
-participant_info = gui.Dlg(title="Enter Participant Data File Name")
-participant_info.addField("Please enter a file name with 8 or fewer characters\n' + \'[letters, numbers, and underscore].")
+participant_info = gui.Dlg(title="Participant Information")
+participant_info.addField("Participant ID:")
 participant_info.show()
 
 if not participant_info.OK:
@@ -14,6 +14,14 @@ participant_id = participant_info.data[0]
 
 # create a window
 win = visual.Window([1024, 768], color="white", units='pix')
+
+# Initial screen
+instruction_text = visual.TextStim(win, text="Press space bar to start the prictice trials", color="black")
+instruction_text.draw()
+win.flip()
+
+# Wait for spacebar to continue
+event.waitKeys(keyList=['space'])
 
 # load the data from CSV file
 data = []
@@ -78,7 +86,7 @@ for row in data:
     # wait for a key press
     keys = event.waitKeys(keyList=['left', 'right'], timeStamped=response_timer)
 
-    # blank screen
+    # blank screen in between trails
     win.flip()
     core.wait(1.0)  # Adjust the duration as needed
 
