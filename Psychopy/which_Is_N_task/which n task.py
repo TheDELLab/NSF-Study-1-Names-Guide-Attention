@@ -1,6 +1,7 @@
 from psychopy import visual, core, sound, event, gui, clock
 import csv
 import os
+import random
 
 # Show dialog to input participant ID
 participant_info = gui.Dlg(title="Participant Information")
@@ -16,7 +17,7 @@ participant_id = participant_info.data[0]
 win = visual.Window([1024, 768], color="white", units='pix')
 
 # Initial screen
-instruction_text = visual.TextStim(win, text="Press space bar to start the prictice trials", color="black")
+instruction_text = visual.TextStim(win, text="Press space bar to start the practice trials", color="black")
 instruction_text.draw()
 win.flip()
 
@@ -34,17 +35,22 @@ with open("./which_is_N_numbers.csv", "r", encoding="utf-8-sig") as data_file:
     for row in data_reader:
         data.append(row)
 
-# Print the data rows
-for row in data:
-    print(row)
+# Get the practice trials (first two rows)
+practice_trials = data[:2]
 
-# get the path to the audio folder
-audio_folder = "./Which_is_N_wavs"
+# Get the remaining trials for randomization
+experimental_trials = data[2:]
+
+# Randomize the experimental trials
+random.shuffle(experimental_trials)
+
+# Combine practice trials and randomized experimental trials
+trials = practice_trials + experimental_trials
 
 # create a loop to iterate through the data
 results = []
 
-for row in data:
+for row in trials:
     # extract the digits and location for each row
     target_digit = row["Target"]
     foil_digit = row["Foil"]
@@ -53,23 +59,18 @@ for row in data:
 
     # create stimuli for each round
     if location.lower() == "left":
-        print(row["Location"])
         target_pos = (-200, 0)
         foil_pos = (200, 0)
-        print(target_pos)
     elif location.lower() == "right":
-        print(row["Location"])
         target_pos = (200, 0)
         foil_pos = (-200, 0)
-        print(target_pos)
-
     else:
         # Handle cases where location is neither "left" nor "right"
         continue
 
     target_stim = visual.TextStim(win, text=target_digit, pos=target_pos, color="black", height=150)
     foil_stim = visual.TextStim(win, text=foil_digit, pos=foil_pos, color="black", height=150)
-    audio_path = os.path.join(audio_folder, audio_file + ".wav")
+    audio_path = os.path.join("./Which_is_N_wavs", audio_file + ".wav")
     audio = sound.Sound(audio_path)
 
     # draw the stimuli and flip the window
@@ -86,7 +87,7 @@ for row in data:
     # wait for a key press
     keys = event.waitKeys(keyList=['left', 'right'], timeStamped=response_timer)
 
-    # blank screen in between trails
+    # blank screen in between trials
     # Initial screen
     pause_text = visual.TextStim(win, text="Press space to continue", color='black')
     pause_text.draw()
@@ -103,7 +104,7 @@ for row in data:
         "Location": location,
         "Audio": audio_file,
         "Response": keys[0][0],  # Get the key from the response
-        "Response Time": round(keys[0][1], 3) if keys else None  # Get the response time to 3rd decimal place
+        "Response Time": round(keys[0][1], 3) if keys else None  # Get the response time to 3 decimal places
     }
     results.append(trial_results)
 
