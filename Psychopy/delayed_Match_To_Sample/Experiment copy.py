@@ -1,12 +1,8 @@
 import time
 import csv
 import os
-
 from psychopy import visual, event, core, sound, gui
 from string import ascii_letters, digits
-
-#set sound library
-sound.audioLib = 'sounddevice'
 
 # for animation coordinates
 import numpy as np
@@ -21,7 +17,7 @@ import pandas as pd
 # random
 from random import choice
 
-# annimation for delay screens
+
 def animation_screen(win, orientation,imgs):
     
     if orientation == 'normal':
@@ -95,6 +91,76 @@ def animation_screen(win, orientation,imgs):
             win.flip()
         #    if x_pos < -960:  # check if plane has reached left end of screen
         #        break
+        
+#
+#def animation_screen(win, orientation, imgs):
+#    scn_width, scn_height = win.size
+#    
+#    scn_width -= 300
+#    scn_height -= 300
+#    
+#    if orientation == 'normal':
+#        # Generate random x and y coordinates
+#        x = np.linspace(0, 0.2 * np.pi, 10)
+#        y = np.random.rand(10)
+#
+#        # Add some noise to the y coordinates
+#        y += np.random.normal(scale=0.05, size=y.shape)
+#
+#        # Create the interpolation object
+#        spline = make_interp_spline(x, y)
+#
+#        # Initialize PsychoPy window and image stimulus
+#        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+#
+#        # Set starting position of the plane
+#        x_pos = -scn_width/2  # left edge of the screen
+#        y_pos = spline(x.min()) * scn_height - scn_height/2
+#        image.pos = [x_pos, y_pos]
+#
+#        # Loop through the spline points and move the image stimulus
+#        for t in np.linspace(x.min(), x.max(), num=700):
+#            x_pos = t * scn_width - scn_width/2
+#            y_pos = spline(t) * scn_height - scn_height/2
+#            image.pos = [x_pos, y_pos]
+#            image.draw()
+#            win.flip()
+#            if x_pos > scn_width/2:  # check if image has reached right end of screen
+#                break
+#
+#    elif orientation == 'reverse':
+#        # Generate random x and y coordinates
+#        x = np.linspace(0, 0.2 * np.pi, 10)
+#        y = np.random.rand(10)
+#
+#        # Add some noise to the y coordinates
+#        y += np.random.normal(scale=0.05, size=y.shape)
+#
+#        # Reverse the order of the x and y arrays
+#        x = x[::-1]
+#        y = y[::-1]
+#
+#        # Create the interpolation object
+#        spline = make_interp_spline(x, y)
+#
+#        # Initialize PsychoPy window and image stimulus
+#        image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+#
+#        # Set starting position of the plane
+#        x_pos = scn_width/2  # right edge of the screen
+#        y_pos = spline(x.max()) * scn_height - scn_height/2
+#        image.pos = [x_pos, y_pos]
+#
+#        # Loop through the spline points and move the image stimulus
+#        for t in np.linspace(x.min(), x.max(), num=700):
+#            x_pos = scn_width/2 - (t * scn_width - scn_width/2)
+#            y_pos = spline(t) * scn_height - scn_height/2
+#            image.pos = [x_pos, y_pos]
+#            image.draw()
+#            win.flip()
+#        #    if x_pos < -scn_width/2:  # check if image has reached left end of screen
+#        #        break
+
         
 
 file_name = '100'
@@ -174,9 +240,8 @@ if not os.path.exists(session_folder):
 
 orientation_list = ["normal","reverse"]
 
-#simplifying what is presented during delay
-imgs_n = ["./images/sun.png"]
-imgs_r = ["./images/sun.png"]
+imgs_n = ["./images/sun.png","./images/balloon.png","./images/dog.png","./images/bird.png","./images/plane.png","./images/superhero.png"]
+imgs_r = ["./images/sun.png","./images/balloon.png","./images/dog.png","./images/bird-inverse.png","./images/plane-inverse.png","./images/superhero-inverse.png"]
 
 imgs_n = cycle(imgs_n)
 imgs_r = cycle(imgs_r)
@@ -214,24 +279,17 @@ iterator = 1
 ## Practice Trials 
 def simulate_trial(win):
     
-    #present image of cookie monster to explain context of game
-    cookieMonster = visual.ImageStim(win, image='./images/Cookie-Monster.png',pos=(0,0))
-    cookieMonster.draw()
-    win.flip()
-
-    # wait for spacebar to continue
-    event.waitKeys(keyList=['space'])
-    
-    #play token image to explain reward system 
-    path = visual.ImageStim(win, image='./images/token.png',pos=(0,0))
+    #play map path first
+    path = visual.ImageStim(win, image='./images/path.png',pos=(0,0))
     path.draw()
     win.flip()
-
-    event.waitKeys(keyList=['space'])
+    
+    control_key = event.waitKeys(keyList=['space', 'escape'])
 
     #start practice 
-    start_practice_text = visual.TextStim(win, text='Press space bar to start the prictice trials', pos=(0,0), height=25, color='black')
-    start_practice_text.draw()
+    info = visual.TextStim(win, text='Press space bar to start the prictice trials', pos=(0,0), height=25, color='black')
+    note = visual.TextStim(win, text='Which one did you see first?', pos=(0,-400), height=25, color='black')
+    info.draw()
     win.flip()
 
     control_key = event.waitKeys(keyList=['space', 'escape'])
@@ -267,25 +325,24 @@ def simulate_trial(win):
             # Wait for 3 seconds
             #time.sleep(3)
         
-           # control_key = event.waitKeys(keyList=['space'])
-            event.waitKeys(keyList=['space'])
+            control_key = event.waitKeys(keyList=['space'])
 
             if control_key[0] == 'space':
+            
+                #time.sleep(0.5) # Just to be ready
 
                 # Display the target number
                 number.draw()
+                win.flip()
                 
                 # Play audio stimulus
                 audio_Prac.play()
-                
-                #update screen
-                win.flip()
             
                 # Wait for audio to finish playing
                 core.wait(audio_Prac.getDuration())
 
                 # Wait for 4 seconds
-                time.sleep(3)
+                time.sleep(4)
 
                 # Animate the plane
                 orientation = choice(orientation_list)
@@ -365,11 +422,57 @@ def simulate_trial(win):
                 return None
 
 
+    #     for _ in range(2):  # Repeat the block twice
+    #         target_image = visual.ImageStim(win, image='./images/turtle.png', pos=(-10, 0))
+    #         target_left_image = visual.ImageStim(win, image='./images/turtle.png', pos=(-400, 0))
+    #         foil_left_image = visual.ImageStim(win, image='./images/elephant.png', pos=(400, 0))
+
+    #         audio_folder = "./audio/turtle.wav"
+    #         audio = sound.Sound(audio_folder)
+
+    #         audio.play()
+
+    #         target_image.draw()
+    #         win.flip()
+
+    #         time.sleep(1)
+            
+    #         win.flip()  # Display a blank screen
+
+    #         time.sleep(5)  # Pause for 1 second
+
+    #         target_left_image.draw()
+    #         foil_left_image.draw()
+    #         note.draw()
+    #         win.flip()
+
+    #         time.sleep(3)
+
+    #         start_time = time.time()
+    #         keys = event.waitKeys(keyList=['left', 'right', 'escape'])
+    #         response_time = round((time.time() - start_time), 3)
+    #         response_key = keys[0]
+
+    #         if response_key == 'left':
+    #             duration = 2.5
+    #             frames_per_second = 60
+    #             num_frames = int(duration * frames_per_second)
+    #             pos_change = np.array((410, 0)) / num_frames
+
+    #             for frame in range(num_frames):
+    #                 target_left_image.pos += pos_change
+    #                 target_left_image.draw()
+    #                 foil_left_image.draw()
+    #                 win.flip()
+    # elif control_key[0] == 'escape':
+    #     return None
+
+
 simulate_trial(win)
 
-path = visual.ImageStim(win, image='./images/giving_token.png',pos=(0,0))
+path = visual.ImageStim(win, image='./images/path.png',pos=(0,0))
 path.draw()
-#info.draw()
+info.draw()
 win.flip()
 
 control_key = event.waitKeys(keyList=['space'])
@@ -411,20 +514,20 @@ if control_key[0] == 'space':
 
         if control_key[0] == 'space':
             
+            #time.sleep(0.5) # Just to be ready
+
             # Display the target number
             number.draw()
-            
+            win.flip()
+                
             # Play audio stimulus
             audio.play()
-            
-            #update screen
-            win.flip()
             
             # Wait for audio to finish playing
             core.wait(audio.getDuration())
 
-            # Wait for 3 seconds
-            time.sleep(3)
+            # Wait for 4 seconds
+            time.sleep(4)
 
             # Animate the plane
             orientation = choice(orientation_list)
@@ -521,8 +624,8 @@ if control_key[0] == 'space':
             trials_data.append(trial_data)
             
             if  iterator % 6 == 0: # 4 Check points and 24 Trials, so 24/4 every Sixth Trial is a check point
-                #checkpoint_flag += 1 
-                checkpoint = visual.ImageStim(win, image=f'./images/giving_token.png', pos=(0,0))
+                checkpoint_flag += 1 
+                checkpoint = visual.ImageStim(win, image=f'./images/checkpoint{checkpoint_flag}.png', pos=(0,0))
                 # Display the checkpoint image
                 checkpoint.draw()
                 win.flip()

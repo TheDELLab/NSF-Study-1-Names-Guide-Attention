@@ -1,16 +1,15 @@
-﻿Target,Foil,Location,Answer,Audio
-1,2,left,,Which is one
-2,1,right,,Which one is two
-36,306,left,,Can you tell me which is thirty six
-85,850,left,,Which one is eighty five
-105,125,left,,Which is one hundred five
-8,2,left,,Can you tell me which one is eight
-21,201,right,,Can you tell me which is twenty one
-260,206,right,,Which is two hundred sixty
-350,305,left,,Which one is three hundred fifty
-42,402,right,,Which is forty two
-604,64,left,,Which is six hundred four
-67,670,right,,Can you tell me which is sixty seven
-807,78,left,,Which one is eight hundred seven
-100,150,right,,Which is one hundred
-505,550,right,,Can you tell me which one is five hundred five
+﻿Target,Foil,Location,Answer,Audio,Type,
+1,2,left,,Which is one,practice,
+36,306,left,,Can you tell me which is thirty six,added 0,
+85,850,left,,Which one is eighty five,added 0,
+21,201,right,,Can you tell me which is twenty one,added 0,
+42,402,right,,Which is forty two,added 0,
+7092,7410,left,,Which is seven thousand nine hundred and two,no trans,
+677,766,right,,Can you tell me which is six hundred and seventy seven,no trans,
+105,125,left,,Which is one hundred and five,no trans,
+39,29,left,,Can you tell me which one is thirty nine,no trans,
+3,7,right,,Which one is three,single,
+260,206,right,,Which is two hundred and sixty,trans,
+350,305,left,,Which one is three hundred and fifty,trans, 
+505,550,right,,Can you tell me which one is five hundred and five,trans,
+2006,2060,right,,Which one is two thousand and six,trans,

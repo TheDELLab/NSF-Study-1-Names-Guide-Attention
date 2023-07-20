@@ -3,6 +3,9 @@ import csv
 import os
 import random
 
+# Set the audio backend to sounddeveice
+sound.audioLib = 'sounddevice'
+
 # Show dialog to input participant ID
 participant_info = gui.Dlg(title="Participant Information")
 participant_info.addField("Participant ID:")
@@ -14,7 +17,8 @@ if not participant_info.OK:
 participant_id = participant_info.data[0]
 
 # create a window
-win = visual.Window([1024, 768], color="white", units='pix')
+#win = visual.Window([1024, 768], color="white", units='pix')
+win = visual.Window(fullscr=True, units='pix', color=(1, 1, 1))
 
 # Initial screen
 instruction_text = visual.TextStim(win, text="Press space bar to start the practice trials", color="black")
@@ -59,27 +63,32 @@ for row in trials:
 
     # create stimuli for each round
     if location.lower() == "left":
-        target_pos = (-200, 0)
-        foil_pos = (200, 0)
+        target_pos = (-300, 0)
+        foil_pos = (300, 0)
     elif location.lower() == "right":
-        target_pos = (200, 0)
-        foil_pos = (-200, 0)
+        target_pos = (300, 0)
+        foil_pos = (-300, 0)
     else:
         # Handle cases where location is neither "left" nor "right"
         continue
 
-    target_stim = visual.TextStim(win, text=target_digit, pos=target_pos, color="black", height=150)
-    foil_stim = visual.TextStim(win, text=foil_digit, pos=foil_pos, color="black", height=150)
+    target_stim = visual.TextStim(win, text=target_digit, pos=target_pos, color="black", height=200)
+    foil_stim = visual.TextStim(win, text=foil_digit, pos=foil_pos, color="black", height=200)
     audio_path = os.path.join("./Which_is_N_wavs", audio_file + ".wav")
     audio = sound.Sound(audio_path)
 
-    # draw the stimuli and flip the window
+    # draw the stimuli 
     target_stim.draw()
     foil_stim.draw()
-    win.flip()
 
     # play the audio
     audio.play()
+
+    #flip the window
+    win.flip()
+
+    # # play the audio
+    # audio.play()
 
     # start the response timer
     response_timer = clock.CountdownTimer()
@@ -92,7 +101,7 @@ for row in trials:
     pause_text = visual.TextStim(win, text="Press space to continue", color='black')
     pause_text.draw()
     win.flip()
-    core.wait(1.0)  # Adjust the duration as needed
+    #core.wait(1.0)  # Adjust the duration as needed
 
     # wait for spacebar to continue
     event.waitKeys(keyList=['space'])
