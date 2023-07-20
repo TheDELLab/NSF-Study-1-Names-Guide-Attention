@@ -263,9 +263,6 @@ def simulate_trial(win):
             doll.draw()
             info.draw()
             win.flip()
-
-            # Wait for 3 seconds
-            #time.sleep(3)
         
            # control_key = event.waitKeys(keyList=['space'])
             event.waitKeys(keyList=['space'])
@@ -285,7 +282,7 @@ def simulate_trial(win):
                 core.wait(audio_Prac.getDuration())
 
                 # Wait for 4 seconds
-                time.sleep(3)
+                time.sleep(0.25)
 
                 # Animate the plane
                 orientation = choice(orientation_list)
@@ -404,9 +401,6 @@ if control_key[0] == 'space':
         info.draw()
         win.flip()
 
-        # Wait for 3 seconds
-        #time.sleep(3)
-        
         control_key = event.waitKeys(keyList=['space'])
 
         if control_key[0] == 'space':
@@ -424,7 +418,7 @@ if control_key[0] == 'space':
             core.wait(audio.getDuration())
 
             # Wait for 3 seconds
-            time.sleep(3)
+            time.sleep(0.25)
 
             # Animate the plane
             orientation = choice(orientation_list)
