@@ -28,7 +28,12 @@ use pandas
 conditions = pd.read_csv("Sample_Conditions.csv")
 #print(conditions)
 condition_1 = conditions[conditions['Conditions']==1]['Audio'].to_list()
-condition_2 = conditions[conditions['Conditions']==2]['Audio'].to_list()
+
+# Avoiding the repetitions
+condition_2 = list(conditions[conditions['Conditions']==2]['Audio'].unique())
+
+
+
 
 
 folder_path = os.path.expanduser('~/Downloads/condition_2')
@@ -74,6 +79,16 @@ time.sleep(3)
 driver.find_element(By.XPATH, '''/html/body/div[2]/div[2]/div/mat-dialog-container/app-pw-voices/div/div/div[2]/button[3]''').click()
 
 
+ # AUDIO SPEED
+driver.find_element(By.XPATH, '''//*[@id="pw-reading-page"]/div[1]/div/div[2]/app-pw-reading-bar/div/div/button[5]''').click()
+time.sleep(2)
+for _ in range(11):
+    driver.find_element(By.XPATH, '''//*[@id="mat-menu-panel-11"]/div/div/div/div[3]/div[1]/button[2]''').click()
+    
+# Close the Speed Control Slider
+time.sleep(0.5)
+driver.find_element(By.XPATH, '''//*[@id="mat-menu-panel-11"]/div/div/div/div[1]/button''').click()
+
 # time.sleep(3)
 # driver.find_element(By.XPATH, '''/html/body/app-root/app-main/app-pw-page/div/div[2]/app-pw-single-page/div[1]/div[1]/div/div[2]/app-pw-reading-bar/div/div/button[3]''').click()
 
@@ -104,6 +119,10 @@ for key,condition in zip(["Condition 1", "Condition 2"],[condition_1, condition_
         div_element.send_keys(f"{NUMBER_NAME}")
 
 
+        
+        
+        time.sleep(3)
+
         # Download Sequence.
         # Click on the 3 Dots
         driver.find_element(By.XPATH, '''//*[@id="pwReadingMenuTrigger"]''').click()
@@ -131,7 +150,7 @@ for key,condition in zip(["Condition 1", "Condition 2"],[condition_1, condition_
 
         print('Done!')
 
-        
+    
 
 print('--'*25)
 print('Sequence Completed')
