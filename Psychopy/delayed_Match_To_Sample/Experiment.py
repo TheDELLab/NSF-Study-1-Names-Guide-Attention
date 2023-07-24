@@ -280,7 +280,7 @@ def simulate_trial(win):
             
                 # Wait for audio to finish playing
                 #core.wait(audio_Prac.getDuration())
-                core.wait(3)
+                core.wait(3.5)
 
                 # Animate the plane
                 orientation = choice(orientation_list)
