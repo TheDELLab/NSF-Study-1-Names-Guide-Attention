@@ -189,7 +189,10 @@ imgs_r = cycle(imgs_r)
 
 
 # Create a window to display the stimuli
-win = visual.Window(fullscr=True, units='pix', color=(1, 1, 1))
+screen_width = 3072
+screen_height = 1920
+
+win = visual.Window(size = (screen_width, screen_height), fullscr=True, units='pix', color=(1, 1, 1))
 # info screen
 info = visual.TextStim(win, text='Press Space to Start Trial', pos=(0,-400), height=25, color='black')
 
