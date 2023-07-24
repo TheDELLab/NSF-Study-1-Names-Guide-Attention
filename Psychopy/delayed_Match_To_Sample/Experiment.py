@@ -278,11 +278,15 @@ def simulate_trial(win):
                 # Display the target number
                 number.draw()
                 
+                #update screen
+                win.flip()
+                
+                # short delay
+                core.wait(1)
+                
                 # Play audio stimulus
                 audio_Prac.play()
                 
-                #update screen
-                win.flip()
             
                 # Wait for audio to finish playing
                 #core.wait(audio_Prac.getDuration())
@@ -291,7 +295,7 @@ def simulate_trial(win):
                 # Animate the plane
                 orientation = choice(orientation_list)
                 if orientation == 'normal':
-                    animation_screen(win, orientation, imgs_, animation_duration = 4)
+                    animation_screen(win, orientation, imgs_n, animation_duration = 4)
                 elif orientation == 'reverse':
                     animation_screen(win, orientation, imgs_r, animation_duration= 4)
 
@@ -412,11 +416,14 @@ if control_key[0] == 'space':
             # Display the target number
             number.draw()
             
-            # Play audio stimulus
-            audio.play()
-            
             #update screen
             win.flip()
+            
+            # short delay
+            core.wait(1)
+            
+            # Play audio stimulus
+            audio.play()
             
             # Wait for audio to finish playing
             #core.wait(audio.getDuration())
