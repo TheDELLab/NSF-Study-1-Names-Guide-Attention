@@ -22,7 +22,7 @@ import pandas as pd
 from random import choice
 
 # annimation for delay screens
-def animation_screen(win, orientation,imgs):
+def animation_screen(win, orientation,imgs, animation_duration = 4):
     
     if orientation == 'normal':
         # Generate random x and y coordinates
@@ -41,21 +41,24 @@ def animation_screen(win, orientation,imgs):
         # Initialize PsychoPy window and image stimulus
         #win = visual.Window(units="pix", fullscr=True, color=(1,1,1))
         image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+        #initialize clock to measure time
+        clock = core.Clock()
 
         # Set starting position of the plane
         x_pos = -960  # left edge of the screen
         y_pos = spline(x.min()) * 900 - 500
         image.pos = [x_pos, y_pos]
-
+    
         # Loop through the spline points and move the image stimulus
-        for t in np.linspace(x.min(), x.max(), num=600):
-            x_pos = t * win.size[0] - 1100  # adjust x_pos calculation
-            y_pos = spline(t) * 900 - 500
-            image.pos = [x_pos, y_pos]
-            image.draw()
-            win.flip()
-            if x_pos > 960:  # check if plane has reached right end of screen
-                break
+        while clock.getTime() < animation_duration:
+            for t in np.linspace(x.min(), x.max(), num=600):
+                x_pos = t * win.size[0] - 1100  # adjust x_pos calculation
+                y_pos = spline(t) * 900 - 500
+                image.pos = [x_pos, y_pos]
+                image.draw()
+                win.flip()
+                if x_pos > 960 or clock.getTime() >= animation_duration:  # check if plane has reached right end of screen
+                    break
 
     elif orientation == 'reverse':
         # Generate random x and y coordinates
@@ -80,6 +83,8 @@ def animation_screen(win, orientation,imgs):
 
         # Initialize PsychoPy window and image stimulus
         image = visual.ImageStim(win, image=next(imgs), size=[120, 120])
+        #initialize clock to measure time
+        clock = core.Clock()
 
         # Set starting position of the plane
         x_pos = 960  # right edge of the screen
@@ -87,14 +92,15 @@ def animation_screen(win, orientation,imgs):
         image.pos = [x_pos, y_pos]
 
         # Loop through the spline points and move the image stimulus
-        for t in np.linspace(x.min(), x.max(), num=600):
-            x_pos = 960 - (t * win.size[0] - 200)  # adjust x_pos calculation
-            y_pos = spline(t) * 900 - 500
-            image.pos = [x_pos, y_pos]
-            image.draw()
-            win.flip()
-        #    if x_pos < -960:  # check if plane has reached left end of screen
-        #        break
+        while clock.getTime() < animation_duration:
+            for t in np.linspace(x.min(), x.max(), num=600):
+                x_pos = 960 - (t * win.size[0] - 200)  # adjust x_pos calculation
+                y_pos = spline(t) * 900 - 500
+                image.pos = [x_pos, y_pos]
+                image.draw()
+                win.flip()
+                if x_pos < -960 or clock.getTime() >= animation_duration:  # check if plane has reached left end of screen
+                    break
         
 
 file_name = '100'
@@ -285,9 +291,9 @@ def simulate_trial(win):
                 # Animate the plane
                 orientation = choice(orientation_list)
                 if orientation == 'normal':
-                    animation_screen(win, orientation, imgs_n)
+                    animation_screen(win, orientation, imgs_, animation_duration = 4)
                 elif orientation == 'reverse':
-                    animation_screen(win, orientation, imgs_r )
+                    animation_screen(win, orientation, imgs_r, animation_duration= 4)
 
 
                 # Display the number and foil
@@ -419,9 +425,9 @@ if control_key[0] == 'space':
             # Animate the plane
             orientation = choice(orientation_list)
             if orientation == 'normal':
-                animation_screen(win, orientation, imgs_n)
+                animation_screen(win, orientation, imgs_n, animation_duration= 4)
             elif orientation == 'reverse':
-                animation_screen(win, orientation, imgs_r )
+                animation_screen(win, orientation, imgs_r, animation_duration= 4)
 
 
             # Display the number and foil
