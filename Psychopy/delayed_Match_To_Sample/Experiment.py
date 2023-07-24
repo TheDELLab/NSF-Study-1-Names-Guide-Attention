@@ -279,7 +279,8 @@ def simulate_trial(win):
                 win.flip()
             
                 # Wait for audio to finish playing
-                core.wait(audio_Prac.getDuration())
+                #core.wait(audio_Prac.getDuration())
+                core.wait(3)
 
                 # Wait for 4 seconds
                 time.sleep(0.25)
