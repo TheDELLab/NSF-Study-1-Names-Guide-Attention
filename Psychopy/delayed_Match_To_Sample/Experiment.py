@@ -254,6 +254,8 @@ def simulate_trial(win):
         
             # Audio Instantiation
             audio_Prac = sound.Sound(f"./practiceTrials/audio/{audioPrac}.wav") 
+
+            whichDidYouSee = sound.Sound(f"./audio/Which one did you see.wav")
        
             # Target position 
             target_location = condPrac.loc[trialPrac,'Location']
@@ -303,6 +305,10 @@ def simulate_trial(win):
                 # Display the number and foil
                 left_number.draw()
                 right_number.draw()
+                
+                # Play the "which one did you see? audio"
+                whichDidYouSee.play()
+
                 win.flip()
        
           
@@ -393,6 +399,8 @@ if control_key[0] == 'space':
         
         # Audio Instantiation
         audio = sound.Sound(f"./audio/{audio}.wav") 
+
+        whichDidYouSee = sound.Sound(f"./audio/Which one did you see.wav")
        
         # Target position 
         target_location = cond.loc[trial,'Location']
@@ -440,10 +448,12 @@ if control_key[0] == 'space':
             # Display the number and foil
             left_number.draw()
             right_number.draw()
-            win.flip()
-       
-                
-                
+
+            # Play the "which one did you see? audio"
+            whichDidYouSee.play()
+
+            win.flip()       
+            
                 
             # Wait for a key press
             start_time = time.time()
