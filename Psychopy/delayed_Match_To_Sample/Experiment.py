@@ -282,9 +282,6 @@ def simulate_trial(win):
                 #core.wait(audio_Prac.getDuration())
                 core.wait(3)
 
-                # Wait for 4 seconds
-                time.sleep(0.25)
-
                 # Animate the plane
                 orientation = choice(orientation_list)
                 if orientation == 'normal':
@@ -416,10 +413,8 @@ if control_key[0] == 'space':
             win.flip()
             
             # Wait for audio to finish playing
-            core.wait(audio.getDuration())
-
-            # Wait for 3 seconds
-            time.sleep(0.25)
+            #core.wait(audio.getDuration())
+            core.wait(3.5)
 
             # Animate the plane
             orientation = choice(orientation_list)
