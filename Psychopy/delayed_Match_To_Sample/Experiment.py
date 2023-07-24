@@ -192,7 +192,7 @@ info = visual.TextStim(win, text='Press Space to Start Trial', pos=(0,-400), hei
 trials_data = []
 
 # Read in the conditions from the CSV file
-conditions = pd.read_csv("./conditions/Sample_Conditions.csv").drop('Unnamed: 0',axis=1)
+conditions = pd.read_csv("./conditions/numPairTrialsByConditions.csv").drop('Unnamed: 0',axis=1)
 #CONDITION_NUM = 2 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
 cond = conditions[conditions['Conditions']==CONDITION_NUM] 
 cond = cond.reset_index(drop=True)
