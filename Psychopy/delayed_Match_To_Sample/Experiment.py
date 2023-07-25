@@ -258,7 +258,7 @@ def simulate_trial(win):
         
             # Create the stimuli
             doll = visual.ImageStim(win, image='./practiceTrials/images/Cookie-Monster-smaller.png',pos=(0,300))
-            number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=300, pos=(-10, 0) )
+            number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=350, pos=(-10, 0) )
         
     
         
@@ -270,11 +270,11 @@ def simulate_trial(win):
             # Target position 
             target_location = condPrac.loc[trialPrac,'Location']
             if condPrac.loc[trialPrac,'Location'] == 'left':
-                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=250, pos=(-400, 0))
-                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=250, pos=(400, 0))
+                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=350, pos=(-500, 0))
+                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=350, pos=(450, 0))
             else:
-                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=250, pos=(-400, 0))
-                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=250, pos=(400, 0))
+                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=350, pos=(-500, 0))
+                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=350, pos=(450, 0))
 
        
             # Display the doll
@@ -403,7 +403,7 @@ if control_key[0] == 'space':
 
         # Create the stimuli
         doll = visual.ImageStim(win, image='./images/Cookie-Monster-smaller.png',pos=(0,300))
-        number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=300, pos=(-10, 0) )
+        number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(-10, 0) )
         
     
         
@@ -415,11 +415,11 @@ if control_key[0] == 'space':
         # Target position 
         target_location = cond.loc[trial,'Location']
         if cond.loc[trial,'Location'] == 'left':
-            left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=250, pos=(-400, 0))
-            right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=250, pos=(400, 0))
+            left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(-500, 0))
+            right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=350, pos=(450, 0))
         else:
-            left_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=250, pos=(-400, 0))
-            right_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=250, pos=(400, 0))
+            left_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=350, pos=(-500, 0))
+            right_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(450, 0))
 
        
         # Display the doll
