@@ -4,6 +4,7 @@ import os
 
 from psychopy import visual, event, core, sound, gui
 from string import ascii_letters, digits
+from psychopy import monitors, visual, core
 
 #set sound library
 sound.audioLib = 'sounddevice'
@@ -187,12 +188,18 @@ imgs_r = ["./images/sun.png"]
 imgs_n = cycle(imgs_n)
 imgs_r = cycle(imgs_r)
 
-
-# Create a window to display the stimuli
+# Define screen resolution
 screen_width = 3072
 screen_height = 1920
 
-win = visual.Window(size = (screen_width, screen_height), fullscr=True, units='pix', color=(1, 1, 1))
+# Create a new monitor object with the desired settings
+my_monitor = monitors.Monitor(name='my_monitor', width = 29)
+
+# set the screen resolution
+my_monitor.setSizePix((screen_width, screen_height))
+
+# open a window
+win = visual.Window(monitor = my_monitor, fullscr=True, units='pix', color=(1, 1, 1))
 # info screen
 info = visual.TextStim(win, text='Press Space to Start Trial', pos=(0,-400), height=25, color='black')
 
