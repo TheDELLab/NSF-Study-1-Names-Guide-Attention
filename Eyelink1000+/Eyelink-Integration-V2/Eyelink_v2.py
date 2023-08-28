@@ -982,7 +982,7 @@ def run_trial():
 
         if control_key[0] == 'space':
     
-            for trial, audio in zip(trial_range, audio):
+            for trial, audio in zip(trial_range[:6], audio[:6]):
                 
             
 
@@ -1161,13 +1161,13 @@ def run_trial():
         
         
     # Write the data to a CSV file
-    filepath = os.path.join(session_folder,edf_fname+".csv")
-    with open(filepath, 'w', newline='') as csvfile:
-        fieldnames = ['trail_id', 'condition','num_presentation_type','audio_presentation_context','target_number', 'foil', 'response_key', 'response_time']
+    with open(f'{session_folder}/{file_name}_data.csv', 'w', newline='') as csvfile:
+        fieldnames = ['trial_id', 'condition','num_presentation_type','audio_presentation_context','other_features','target_number','accuracy','foil', 'response_key', 'response_time']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for trial_data in trials_data:
             writer.writerow(trial_data)
+
 
 
 
