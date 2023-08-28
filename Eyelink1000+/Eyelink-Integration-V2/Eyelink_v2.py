@@ -159,7 +159,14 @@ def animation_screen(win, orientation,imgs, animation_duration = 4):
 # TASK SIMULATION SUBROUTINE
 
 ## Practice Trials 
-def simulate_trial(win):
+def simulate_trial(win, trial_range_practice, audio_practice, condPrac):
+    
+    orientation_list = ["normal","reverse"]
+    imgs_n = ["./images/sun.png"]
+    imgs_r = ["./images/sun.png"]
+
+    imgs_n = cycle(imgs_n)
+    imgs_r = cycle(imgs_r)
     
     #present image of cookie monster to explain context of game
     cookieMonster = visual.ImageStim(win, image='./images/Cookie-Monster.png',pos=(0,0))
@@ -735,7 +742,7 @@ def run_trial():
     iterator = 1
 
     # SIMULATE PRACTICE TRIAL
-    simulate_trial(win)
+    simulate_trial(win, trial_range_practice, audio_practice, condPrac)
     
     path = visual.ImageStim(win, image='./images/giving_token.png',pos=(0,0))
     path.draw()
@@ -882,7 +889,7 @@ def run_trial():
 
     # show the image, and log a message to mark the onset of the image
     clear_screen(win)
-    img.draw()
+    doll.draw()
     win.flip()
     el_tracker.sendMessage('image_onset')
     img_onset_time = core.getTime()  # record the image onset time
@@ -1141,8 +1148,8 @@ def run_trial():
                 # update the window position and redraw the screen
                 gaze_window.pos = (int(gaze_pos[0]-scn_width/2.0),
                                 int(scn_height/2.0-gaze_pos[1]))
-                img.draw()
-                win.flip()
+                #doll.draw()
+                #win.flip()
                 
                 # Send the current position of the gaze_contingent window
                 # to the tracker to record in the EDF data file
