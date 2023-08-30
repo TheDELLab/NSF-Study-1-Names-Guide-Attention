@@ -811,14 +811,12 @@ def run_trial():
     bottom = int(scn_height/2.0) + 60
     draw_cmd = 'draw_filled_box %d %d %d %d 1' % (left, top, right, bottom)
     el_tracker.sendCommand(draw_cmd)
+    
     # send a "TRIALID" message to mark the start of a trial, see Data
     # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
     el_tracker.sendMessage('TRIALID %d' % 0)
 
-    # record_status_message : show some info on the Host PC
-    # here we show how many trial has been tested
-    status_msg = 'TRIAL number %d' % 0
-    el_tracker.sendCommand("record_status_message '%s'" % status_msg)
+    
 
     # drift check
     # we recommend drift-check at the beginning of each trial
@@ -915,12 +913,12 @@ def run_trial():
     # format: !V IAREA RECTANGLE <id> <left> <top> <right> <bottom> [label]
     # for all supported interest area commands, see the Data Viewer Manual,
     # "Protocol for EyeLink Data to Viewer Integration"
-    left = int(scn_width/2.0) - 50
-    top = int(scn_height/2.0) - 50
-    right = int(scn_width/2.0) + 50
-    bottom = int(scn_height/2.0) + 50
-    ia_pars = (1, left, top, right, bottom, 'screen_center')
-    el_tracker.sendMessage('!V IAREA RECTANGLE %d %d %d %d %d %s' % ia_pars)
+    # left = int(scn_width/2.0) - 50
+    # top = int(scn_height/2.0) - 50
+    # right = int(scn_width/2.0) + 50
+    # bottom = int(scn_height/2.0) + 50
+    # ia_pars = (1, left, top, right, bottom, 'screen_center')
+    # el_tracker.sendMessage('!V IAREA RECTANGLE %d %d %d %d %d %s' % ia_pars)
 
     # show the image for 5-secs or until the SPACEBAR is pressed
     # move the window to follow the gaze
@@ -928,6 +926,12 @@ def run_trial():
     RT = -1  # keep track of the response time
     gaze_pos = (-32768, -32768)  # initial gaze position (outside the window)
     get_keypress = False
+
+    # send a "TRIALID" message to mark the start of a trial, see Data
+    # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
+    el_tracker.sendMessage('TRIALID %d' % file_name)
+    el_tracker.sendMessage('!V TRIAL_VAR condition %s' % cond)
+
     while not get_keypress:
         # present the picture for a maximum of 5 seconds ~ changed to 100
         if core.getTime() - img_onset_time >= 100:
@@ -984,7 +988,12 @@ def run_trial():
     
             for trial, audio in zip(trial_range[:6], audio[:6]):
                 
-            
+
+                # record_status_message : show some info on the Host PC
+                # here we show how many trial has been tested
+                status_msg = 'TRIAL number %d' % trial
+                el_tracker.sendCommand("record_status_message '%s'" % status_msg)
+                        
 
                 # Create the stimuli
                 doll = visual.ImageStim(win, image='./images/Cookie-Monster-smaller.png',pos=(0,300))
@@ -1008,6 +1017,7 @@ def run_trial():
 
                
                 # Display the doll
+                el_tracker.sendCommand('Message', '!V Cookie Monster')     
                 doll.draw()
                 info.draw()
                 win.flip()
@@ -1017,6 +1027,7 @@ def run_trial():
                 if control_key[0] == 'space':
                     
                     # Display the target number
+                    el_tracker.sendCommand('Message', '!V Target Number Presented') 
                     number.draw()
                     
                     #update screen
@@ -1026,6 +1037,7 @@ def run_trial():
                     core.wait(1)
                     
                     # Play audio stimulus
+                    el_tracker.sendCommand('Message', '!V Audio Stimulus') 
                     audio.play()
                     
                     # Wait for audio to finish playing
@@ -1033,6 +1045,7 @@ def run_trial():
                     core.wait(3.5)
 
                     # Animate the plane
+                    el_tracker.sendCommand('Message', '!V Delay Screen') 
                     orientation = choice(orientation_list)
                     if orientation == 'normal':
                         animation_screen(win, orientation, imgs_n, animation_duration= 4)
@@ -1041,6 +1054,7 @@ def run_trial():
 
 
                     # Display the number and foil
+                    el_tracker.sendCommand('Message', '!V Target and Foil Presented') 
                     left_number.draw()
                     right_number.draw()
 
@@ -1055,7 +1069,7 @@ def run_trial():
                     keys = event.waitKeys(keyList=['left', 'right','escape'])
                     response_time = round((time.time()-start_time), 3)
                     response_key = keys[0]
-                    
+                    el_tracker.sendCommand('Message', '!V Response Recorded')
                     
                     # ACCURACY
                     if response_key == target_location:
@@ -1067,6 +1081,7 @@ def run_trial():
                     # --- animation sequence from here, doesn't have any prevalence on the response time recording.
 
                     # Animate the selected number
+                    
                     if response_key == 'left':
                         selected_number = left_number
                     elif response_key == 'right':
@@ -1183,7 +1198,7 @@ def run_trial():
 
     # record trial variables to the EDF data file, for details, see Data
     # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
-    el_tracker.sendMessage('!V TRIAL_VAR condition %s' % cond)
+    
     #el_tracker.sendMessage('!V TRIAL_VAR image %s' % pic)
     el_tracker.sendMessage('!V TRIAL_VAR RT %d' % RT)
 
