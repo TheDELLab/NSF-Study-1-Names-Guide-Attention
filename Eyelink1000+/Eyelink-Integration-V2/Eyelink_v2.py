@@ -161,6 +161,8 @@ def animation_screen(win, orientation,imgs, animation_duration = 4):
 ## Practice Trials 
 def simulate_trial(win, trial_range_practice, audio_practice, condPrac):
     
+    PRACTICE_DATA = []
+    
     orientation_list = ["normal","reverse"]
     imgs_n = ["./images/sun.png"]
     imgs_r = ["./images/sun.png"]
@@ -184,7 +186,7 @@ def simulate_trial(win, trial_range_practice, audio_practice, condPrac):
     event.waitKeys(keyList=['space'])
 
     #start practice 
-    start_practice_text = visual.TextStim(win, text='Press space bar to start the prictice trials', pos=(0,0), height=25, color='black')
+    start_practice_text = visual.TextStim(win, text='Press space bar to start the practice trials', pos=(0,0), height=25, color='black')
     start_practice_text.draw()
     win.flip()
 
@@ -299,7 +301,7 @@ def simulate_trial(win, trial_range_practice, audio_practice, condPrac):
                     'response_time': response_time,
                     'accuracy': accuracy,
                                     }
-                    Practice_trial_data.append(Practice_trial_data)
+                    PRACTICE_DATA.append(Practice_trial_data)
                     
                     break
                     
@@ -1017,7 +1019,7 @@ def run_trial():
 
                
                 # Display the doll
-                el_tracker.sendCommand('Message', '!V Cookie Monster')     
+                el_tracker.sendMessage('Cookie Monster')     
                 doll.draw()
                 info.draw()
                 win.flip()
@@ -1027,7 +1029,7 @@ def run_trial():
                 if control_key[0] == 'space':
                     
                     # Display the target number
-                    el_tracker.sendCommand('Message', '!V Target Number Presented') 
+                    el_tracker.sendMessage('Target Number Presented') 
                     number.draw()
                     
                     #update screen
@@ -1037,7 +1039,7 @@ def run_trial():
                     core.wait(1)
                     
                     # Play audio stimulus
-                    el_tracker.sendCommand('Message', '!V Audio Stimulus') 
+                    el_tracker.sendMessage('Audio Stimulus') 
                     audio.play()
                     
                     # Wait for audio to finish playing
@@ -1054,7 +1056,7 @@ def run_trial():
 
 
                     # Display the number and foil
-                    el_tracker.sendCommand('Message', '!V Target and Foil Presented') 
+                    el_tracker.sendMessage('Target and Foil Presented') 
                     left_number.draw()
                     right_number.draw()
 
@@ -1069,7 +1071,7 @@ def run_trial():
                     keys = event.waitKeys(keyList=['left', 'right','escape'])
                     response_time = round((time.time()-start_time), 3)
                     response_key = keys[0]
-                    el_tracker.sendCommand('Message', '!V Response Recorded')
+                    el_tracker.sendMessage('Response Recorded')
                     
                     # ACCURACY
                     if response_key == target_location:
@@ -1108,7 +1110,7 @@ def run_trial():
                         
                         break
                         
-
+                    el_tracker.sendMessage('Cookie Monster Animation')
                     start_pos = selected_number.pos
                     end_pos = doll.pos
 
