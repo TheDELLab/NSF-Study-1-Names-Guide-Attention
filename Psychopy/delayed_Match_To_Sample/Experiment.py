@@ -1,6 +1,7 @@
 import time
 import csv
 import os
+import sys
 
 from psychopy import visual, event, core, sound, gui
 from string import ascii_letters, digits
