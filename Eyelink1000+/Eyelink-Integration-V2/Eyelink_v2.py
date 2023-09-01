@@ -931,7 +931,7 @@ def run_trial():
 
     # send a "TRIALID" message to mark the start of a trial, see Data
     # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
-    el_tracker.sendMessage('TRIALID %d' % file_name)
+    el_tracker.sendMessage('TRIALID %s' % file_name)
     el_tracker.sendMessage('!V TRIAL_VAR condition %s' % cond)
 
     while not get_keypress:
@@ -1047,7 +1047,7 @@ def run_trial():
                     core.wait(3.5)
 
                     # Animate the plane
-                    el_tracker.sendCommand('Message', '!V Delay Screen') 
+                    el_tracker.sendMessage('Delay Screen') 
                     orientation = choice(orientation_list)
                     if orientation == 'normal':
                         animation_screen(win, orientation, imgs_n, animation_duration= 4)
