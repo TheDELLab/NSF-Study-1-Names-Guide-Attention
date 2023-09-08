@@ -43,9 +43,25 @@ import random
 import time
 import sys
 from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
-from psychopy import visual, core, event, monitors, gui
+from psychopy import visual, core, event, monitors, gui,sound
 from PIL import Image  # for preparing the Host backdrop image
 from string import ascii_letters, digits
+
+
+#set sound library
+sound.audioLib = 'sounddevice'
+
+# for animation coordinates
+import numpy as np
+from scipy.interpolate import make_interp_spline
+# circular list
+from itertools import cycle # Cycle's through the list of image files. 
+# data reader
+import pandas as pd # for Sample Data CSV access 
+# random
+from random import choice # Randomly selecting the imaging for animation
+
+
 
 # Switch to the script folder
 script_path = os.path.dirname(sys.argv[0])
@@ -79,11 +95,15 @@ trials = [
 #
 # The EDF data filename should not exceed 8 alphanumeric characters
 # use ONLY number 0-9, letters, & _ (underscore) in the filename
-edf_fname = 'TEST'
+
+####################################################################################################
+# EDF AND RESULTS FILENAME - START
+####################################################################################################
+file_name = '100'
 
 # Prompt user to specify an EDF data filename
 # before we open a fullscreen window
-dlg_title = 'Enter EDF File Name'
+dlg_title = 'Enter Participant Data File Name'
 dlg_prompt = 'Please enter a file name with 8 or fewer characters\n' + \
              '[letters, numbers, and underscore].'
 
@@ -91,11 +111,11 @@ dlg_prompt = 'Please enter a file name with 8 or fewer characters\n' + \
 while True:
     dlg = gui.Dlg(dlg_title)
     dlg.addText(dlg_prompt)
-    dlg.addField('File Name:', edf_fname)
+    dlg.addField('Participant ID:', file_name)
     # show dialog and wait for OK or Cancel
     ok_data = dlg.show()
     if dlg.OK:  # if ok_data is not None
-        print('EDF data filename: {}'.format(ok_data[0]))
+        print('Participant data filename: {}'.format(ok_data[0]))
     else:
         print('user cancelled')
         core.quit()
@@ -104,14 +124,14 @@ while True:
     # get the string entered by the experimenter
     tmp_str = dlg.data[0]
     # strip trailing characters, ignore the ".edf" extension
-    edf_fname = tmp_str.rstrip().split('.')[0]
+    file_name = tmp_str.rstrip().split('.')[0]
 
     # check if the filename is valid (length <= 8 & no special char)
     allowed_char = ascii_letters + digits + '_'
-    if not all([c in allowed_char for c in edf_fname]):
-        print('ERROR: Invalid EDF filename')
-    elif len(edf_fname) > 8:
-        print('ERROR: EDF filename should not exceed 8 characters')
+    if not all([c in allowed_char for c in file_name]):
+        print('ERROR: Invalid Participant data filename')
+    elif len(file_name) > 8:
+        print('ERROR: Participant data filename should not exceed 8 characters')
     else:
         break
 
@@ -120,18 +140,63 @@ while True:
 results_folder = 'results'
 if not os.path.exists(results_folder):
     os.makedirs(results_folder)
+    
+
+####################################################################################################
+# EDF AND RESULTS FILENAME - END
+####################################################################################################
+    
+####################################################################################################
+#CONDITION NUMBER - START
+####################################################################################################
+    
+# Prompt user to specify the condition number
+dlg_title = 'Enter Condition Number'
+dlg_prompt = 'Please enter the condition number (1 or 2).'
+
+# Loop until we get a valid condition number
+while True:
+    dlg = gui.Dlg(dlg_title)
+    dlg.addText(dlg_prompt)
+    dlg.addField('Condition Number:', choices=['1', '2'])
+    # Show dialog and wait for OK or Cancel
+    ok_data = dlg.show()
+    if dlg.OK:  # If ok_data is not None
+        CONDITION_NUM = int(ok_data[0])
+        print('Condition Number: {}'.format(CONDITION_NUM))
+        break
+    else:
+        print('User cancelled')
+        core.quit()
+        sys.exit()
+
+####################################################################################################
+#CONDITION NUMBER - END
+####################################################################################################
+
+####################################################################################################
+# FILES CREATED - START
+####################################################################################################
 
 # We download EDF data file from the EyeLink Host PC to the local hard
 # drive at the end of each testing session, here we rename the EDF to
 # include session start date/time
 time_str = time.strftime("_%Y_%m_%d_%H_%M", time.localtime())
-session_identifier = edf_fname + time_str
+session_identifier = file_name + time_str
 
 # create a folder for the current testing session in the "results" folder
 session_folder = os.path.join(results_folder, session_identifier)
 if not os.path.exists(session_folder):
     os.makedirs(session_folder)
+    
 
+####################################################################################################
+# FILES CREATED - END
+####################################################################################################
+
+####################################################################################################
+# EYELINK CONNECTION - START
+####################################################################################################
 # Step 1: Connect to the EyeLink Host PC
 #
 # The Host IP address, by default, is "100.1.1.1".
@@ -149,7 +214,7 @@ else:
         sys.exit()
 
 # Step 2: Open an EDF data file on the Host PC
-edf_file = edf_fname + ".EDF"
+edf_file = file_name + ".EDF"
 try:
     el_tracker.openDataFile(edf_file)
 except RuntimeError as err:
@@ -159,7 +224,17 @@ except RuntimeError as err:
         el_tracker.close()
     core.quit()
     sys.exit()
+    
 
+####################################################################################################
+# EYELINK CONNECTION - END
+####################################################################################################
+
+
+
+####################################################################################################
+# EYELINK ALL AVAILABLE EVENT DEFININTION - START
+####################################################################################################
 # Add a header text to the EDF file to identify the current experiment name
 # This is OPTIONAL. If your text starts with "RECORDED BY " it will be
 # available in DataViewer's Inspector window by clicking
@@ -201,11 +276,18 @@ el_tracker.sendCommand("file_sample_data = %s" % file_sample_flags)
 el_tracker.sendCommand("link_event_filter = %s" % link_event_flags)
 el_tracker.sendCommand("link_sample_data = %s" % link_sample_flags)
 
+####################################################################################################
+# EYELINK ALL AVAILABLE EVENT DEFININTION - END
+####################################################################################################
+
 # Optional tracking parameters
 # Sample rate, 250, 500, 1000, or 2000, check your tracker specification
 # if eyelink_ver > 2:
 #     el_tracker.sendCommand("sample_rate 1000")
 # Choose a calibration type, H3, HV3, HV5, HV13 (HV = horizontal/vertical),
+
+## CALIBERATION TYPE -- HV9 ( NINE POINT CALIBERATION )
+
 el_tracker.sendCommand("calibration_type = HV9")
 # Set a gamepad button to accept calibration/drift check target
 # You need a supported gamepad/button box that is connected to the Host PC
@@ -213,12 +295,27 @@ el_tracker.sendCommand("button_function 5 'accept_target_fixation'")
 
 # Step 4: set up a graphics environment for calibration
 #
+
+####################################################################################################
+# PSYCHOPY WINDOW CONFIGURATION - START
+####################################################################################################
+
+
 # Open a window, be sure to specify monitor parameters
-mon = monitors.Monitor('myMonitor', width=53.0, distance=70.0)
-win = visual.Window(fullscr=full_screen,
-                    monitor=mon,
-                    winType='pyglet',
-                    units='pix')
+screen_width = 3072
+screen_height = 1920
+
+# Open a window, be sure to specify monitor parameters
+mon = monitors.Monitor(name='my_monitor', width = 29)
+mon.setSizePix((screen_width, screen_height))
+win = visual.Window(monitor = mon, fullscr=True,  winType='pyglet',allowStencil=True,units='pix', color=(1, 1, 1))
+#win = visual.Window(fullscr=full_screen,
+#                    monitor=mon,
+#                    winType='pyglet',
+#                    units='pix',
+#                    allowStencil=True, color=(1, 1, 1))
+
+info = visual.TextStim(win, text='Press Space to Start Trial', pos=(0,-400), height=25, color='black')
 
 # get the native screen resolution used by PsychoPy
 scn_width, scn_height = win.size
@@ -227,7 +324,15 @@ if 'Darwin' in platform.system():
     if use_retina:
         scn_width = int(scn_width/2.0)
         scn_height = int(scn_height/2.0)
+        
+        
+####################################################################################################
+# PSYCHOPY WINDOW CONFIGURATION - END
+####################################################################################################
 
+####################################################################################################
+# HOST SCREEN DISPLAY CONFIGURATION - START
+####################################################################################################
 # Pass the display pixel coordinates (left, top, right, bottom) to the tracker
 # see the EyeLink Installation Guide, "Customizing Screen Settings"
 el_coords = "screen_pixel_coords = 0 0 %d %d" % (scn_width - 1, scn_height - 1)
@@ -239,13 +344,29 @@ el_tracker.sendCommand(el_coords)
 dv_coords = "DISPLAY_COORDS  0 0 %d %d" % (scn_width - 1, scn_height - 1)
 el_tracker.sendMessage(dv_coords)
 
+####################################################################################################
+# HOST SCREEN DISPLAY CONFIGURATION - END
+####################################################################################################
+
+####################################################################################################
+# GENERAL TRACKER CONFIGURATION WITH PYLINK - START
+####################################################################################################
+
 # Configure a graphics environment (genv) for tracker calibration
 genv = EyeLinkCoreGraphicsPsychoPy(el_tracker, win)
 print(genv)  # print out the version number of the CoreGraphics library
 
+####################################################################################################
+# GENERAL TRACKER CONFIGURATION WITH PYLINK - END
+####################################################################################################
+
+####################################################################################################
+# CALIBERATION SCREEN, BACKGROUND COLOR, TARGET TYPE, and SOUND - START
+####################################################################################################
+
 # Set background and foreground colors for the calibration target
 # in PsychoPy, (-1, -1, -1)=black, (1, 1, 1)=white, (0, 0, 0)=mid-gray
-foreground_color = (-1, -1, -1)
+foreground_color = (1, 1, 1)
 background_color = win.color
 genv.setCalibrationColors(foreground_color, background_color)
 
@@ -265,6 +386,8 @@ genv.setCalibrationColors(foreground_color, background_color)
 # Use a picture as the calibration target
 genv.setTargetType('picture')
 genv.setPictureTarget(os.path.join('images', 'fixTarget.bmp'))
+
+
 
 # Configure the size of the calibration target (in pixels)
 # this option applies only to "circle" and "spiral" targets
@@ -286,8 +409,15 @@ if use_retina:
 pylink.openGraphicsEx(genv)
 
 
+####################################################################################################
+# CALIBERATION SCREEN, BACKGROUND COLOR, TARGET TYPE, and SOUND - END
+####################################################################################################
+
 # define a few helper functions for trial handling
 
+####################################################################################################
+# GENERIC HELPER FUNCTIONS - START
+####################################################################################################
 
 def clear_screen(win):
     """ clear up the PsychoPy window"""
@@ -381,6 +511,10 @@ def abort_trial():
     el_tracker.sendMessage('TRIAL_RESULT %d' % pylink.TRIAL_ERROR)
 
     return pylink.TRIAL_ERROR
+    
+####################################################################################################
+# GENERIC HELPER FUNCTIONS - END
+####################################################################################################
 
 
 def run_trial(trial_pars, trial_index):
@@ -392,12 +526,14 @@ def run_trial(trial_pars, trial_index):
     """
 
     # unpacking the trial parameters
-    cond, pic = trial_pars
+    cond = trial_pars
+    cookie_monster = 'Cookie-Monster-smaller.png'
+    doll = visual.ImageStim(win, image=os.path.join('./images',cookie_monster),pos=(0,300))
 
     # load the image to display, here we stretch the image to fill full screen
-    img = visual.ImageStim(win,
-                           image=os.path.join('images', pic),
-                           size=(scn_width, scn_height))
+#    img = visual.ImageStim(win,
+#                           image=os.path.join('images', pic),
+#                           size=(scn_width, scn_height))
 
     # get a reference to the currently active EyeLink connection
     el_tracker = pylink.getEYELINK()
@@ -427,7 +563,9 @@ def run_trial(trial_pars, trial_index):
     #             crop_width, crop_height, x, y on the Host, drawing options
     #
     # Use the code commented below to convert the image and send the backdrop
-    im = Image.open('images' + os.sep + pic)  # read image with PIL
+    
+    # ORIGINAL CODE TO STRETCH TO THE ENTIRE DISPLAY
+    im = Image.open('images' + os.sep + cookie_monster)  # read image with PIL  
     im = im.resize((scn_width, scn_height))
     img_pixels = im.load()  # access the pixel data of the image
     pixels = [[img_pixels[i, j] for i in range(scn_width)]
@@ -435,16 +573,39 @@ def run_trial(trial_pars, trial_index):
     el_tracker.bitmapBackdrop(scn_width, scn_height, pixels,
                               0, 0, scn_width, scn_height,
                               0, 0, pylink.BX_MAXCONTRAST)
+                              
+    
+    # Load the image without resizing
+    im = Image.open('images' + os.sep + cookie_monster)
+    # Get the image dimensions
+    img_width, img_height = im.size
+    # Calculate the left offset to center the image horizontally
+    left_offset = (scn_width - img_width) // 2
+    # Access the pixel data of the image
+    img_pixels = im.load()
+    # Construct the pixels list
+    pixels = [[img_pixels[i, j] for i in range(img_width)]
+              for j in range(img_height)]
+    # Send the image data to the tracker
+    # Adjust the source rectangle to the image's dimensions
+    # Adjust the destination rectangle to position the image at the top center
+    el_tracker.bitmapBackdrop(scn_width, scn_height, pixels,
+                              0, 0, img_width, img_height,
+                              left_offset, 0, pylink.BX_MAXCONTRAST)
 
     # OPTIONAL: draw landmarks and texts on the Host screen
     # In addition to backdrop image, You may draw simples on the Host PC to use
     # as landmarks. For illustration purpose, here we draw some texts and a box
     # For a list of supported draw commands, see the "COMMANDS.INI" file on the
     # Host PC (under /elcl/exe)
-    left = int(scn_width/2.0) - 60
-    top = int(scn_height/2.0) - 60
-    right = int(scn_width/2.0) + 60
-    bottom = int(scn_height/2.0) + 60
+    
+    offset = 50  # This value determines how much to the left the rectangle will be.
+
+    left = int(screen_width/2.0) - 60 - offset
+    top = int(screen_height/2.0) - 60
+    right = int(screen_width/2.0) + 60 - offset
+    bottom = int(screen_height/2.0) + 60
+
     draw_cmd = 'draw_filled_box %d %d %d %d 1' % (left, top, right, bottom)
     el_tracker.sendCommand(draw_cmd)
 
@@ -500,7 +661,7 @@ def run_trial(trial_pars, trial_index):
 
     # show the image, and log a message to mark the onset of the image
     clear_screen(win)
-    img.draw()
+    doll.draw()
     win.flip()
     el_tracker.sendMessage('image_onset')
     img_onset_time = core.getTime()  # record the image onset time
@@ -513,7 +674,7 @@ def run_trial(trial_pars, trial_index):
     # send over a message to specify where the image is stored relative
     # to the EDF data file, see Data Viewer User Manual, "Protocol for
     # EyeLink Data to Viewer Integration"
-    bg_image = '../../images/' + pic
+    bg_image = '../../images/' + cookie_monster
     imgload_msg = '!V IMGLOAD CENTER %s %d %d %d %d' % (bg_image,
                                                         int(scn_width/2.0),
                                                         int(scn_height/2.0),
@@ -528,6 +689,26 @@ def run_trial(trial_pars, trial_index):
     # "Protocol for EyeLink Data to Viewer Integration"
     ia_pars = (1, left, top, right, bottom, 'screen_center')
     el_tracker.sendMessage('!V IAREA RECTANGLE %d %d %d %d %d %s' % ia_pars)
+    
+    
+    # INITIALISERS
+    
+    number = visual.TextStim(win, text=cond['Target'], color='black', height=350, pos=(-10, 0) )
+    audio = sound.Sound(f"./audio/{cond['Audio']}.wav") 
+    
+    whichDidYouSee = sound.Sound(f"./audio/Which one did you see.wav")
+    
+    # Target position 
+    target_location = cond['Location']
+    if cond['Location'] == 'left':
+        left_number = visual.TextStim(win, text=cond['Target'], color='black', height=350, pos=(-500, 0))
+        right_number = visual.TextStim(win, text=cond['Foil'], color='black', height=350, pos=(450, 0))
+    else:
+        left_number = visual.TextStim(win, text=cond['Foil'], color='black', height=350, pos=(-500, 0))
+        right_number = visual.TextStim(win, text=cond['Target'], color='black', height=350, pos=(450, 0))
+
+    
+
 
     # show the image for 5-secs or until the SPACEBAR is pressed
     event.clearEvents()  # clear cached PsychoPy events
@@ -571,6 +752,15 @@ def run_trial(trial_pars, trial_index):
                 el_tracker.sendMessage('terminated_by_user')
                 terminate_task()
                 return pylink.ABORT_EXPT
+                
+            
+            # EXPERIMENT CODE
+                
+                
+                
+                
+                
+                
 
     # clear the screen
     clear_screen(win)
@@ -585,7 +775,7 @@ def run_trial(trial_pars, trial_index):
     # record trial variables to the EDF data file, for details, see Data
     # Viewer User Manual, "Protocol for EyeLink Data to Viewer Integration"
     el_tracker.sendMessage('!V TRIAL_VAR condition %s' % cond)
-    el_tracker.sendMessage('!V TRIAL_VAR image %s' % pic)
+    el_tracker.sendMessage('!V TRIAL_VAR image %s' % doll)
     el_tracker.sendMessage('!V TRIAL_VAR RT %d' % RT)
 
     # send a 'TRIAL_RESULT' message to mark the end of trial, see Data
@@ -593,6 +783,9 @@ def run_trial(trial_pars, trial_index):
     el_tracker.sendMessage('TRIAL_RESULT %d' % pylink.TRIAL_OK)
 
 
+####################################################################################################
+# SETTING THE HOST PC INTO CAMERA SETUP MODE - START
+####################################################################################################
 # Step 5: Set up the camera and calibrate the tracker
 
 # Show the task instructions
@@ -611,19 +804,52 @@ if not dummy_mode:
     except RuntimeError as err:
         print('ERROR:', err)
         el_tracker.exitCalibration()
+        
+####################################################################################################
+# SETTING THE HOST PC INTO CAMERA SETUP MODE - END
+####################################################################################################
+
+
+# Read in the conditions from the CSV file
+conditions = pd.read_csv("./conditions/numPairTrialsByConditions.csv").drop('Unnamed: 0',axis=1)
+#CONDITION_NUM = 2 ## CHANGE THE CONDITION NUMBER TO TOGGLE BETWEEN THE TRIAL TYPE ( Current options 1 or 2 ) 
+cond = conditions[conditions['Conditions']==CONDITION_NUM] 
+cond = cond.reset_index(drop=True)
+cond = cond.sample(frac=1) # sample rows and with replacement ( Shuffles all the samples ) 
+trial_range = cond['Trials']# Trial range - 0 to 9
+#audio = cond['Audio']
+
+# CUSTOM RUN_TRIAL CALL
+trial_index =1# SEQUENTIAL TRIAL NUMBER 0 - n conditions
+for i in trial_range:
+    run_trial(cond.iloc[i,:], trial_index)
+    trial_index +=1
+    
+
+
+####################################################################################################
+
+# PLACE FOR THE PRACTICE TRIAL DATA READ
+
+####################################################################################################
+
+
+
+
+
 
 # Step 6: Run the experimental trials, index all the trials
 
-# construct a list of 4 trials
-test_list = trials[:]*2
-
-# randomize the trial list
-random.shuffle(test_list)
-
-trial_index = 1
-for trial_pars in test_list:
-    run_trial(trial_pars, trial_index)
-    trial_index += 1
+## construct a list of 4 trials
+#test_list = trials[:]*2
+#
+## randomize the trial list
+#random.shuffle(test_list)
+#
+#trial_index = 1
+#for trial_pars in test_list:
+#    run_trial(trial_pars, trial_index)
+#    trial_index += 1
 
 # Step 7: disconnect, download the EDF file, then terminate the task
 terminate_task()
