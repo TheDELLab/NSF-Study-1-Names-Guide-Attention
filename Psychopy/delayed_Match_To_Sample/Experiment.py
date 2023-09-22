@@ -189,20 +189,20 @@ imgs_r = ["./images/sun.png"]
 imgs_n = cycle(imgs_n)
 imgs_r = cycle(imgs_r)
 
-# Define screen resolution
-screen_width = 3072
-screen_height = 1920
-
-# Create a new monitor object with the desired settings
-my_monitor = monitors.Monitor(name='my_monitor', width = 29)
-
-# set the screen resolution
-my_monitor.setSizePix((screen_width, screen_height))
+## Define screen resolution
+#screen_width = 3072
+#screen_height = 1920
+#
+## Create a new monitor object with the desired settings
+#my_monitor = monitors.Monitor(name='my_monitor', width = 29)
+#
+## set the screen resolution
+#my_monitor.setSizePix((screen_width, screen_height))
 
 # open a window
-win = visual.Window(monitor = my_monitor, fullscr=True, units='pix', color=(1, 1, 1))
+win = visual.Window(units='norm', fullscr=True, color='white', monitor='testMonitor') 
 # info screen
-info = visual.TextStim(win, text='Press Space to Start Trial', pos=(0,-400), height=25, color='black')
+info = visual.TextStim(win, text='Press Space to Start Trial', pos=(0,-0.4), height=25, color='black')
 
 
 # Create a list to store the data for each trial
@@ -228,167 +228,6 @@ audio_practice = condPrac['Audio']
 checkpoint_flag = 0
 iterator = 1
 
-## Practice Trials 
-def simulate_trial(win):
-    
-    #present image of cookie monster to explain context of game
-    cookieMonster = visual.ImageStim(win, image='./images/Cookie-Monster.png',pos=(0,0))
-    cookieMonster.draw()
-    win.flip()
-
-    # wait for spacebar to continue
-    event.waitKeys(keyList=['space'])
-    
-    #play token image to explain reward system 
-    path = visual.ImageStim(win, image='./images/token.png',pos=(0,0))
-    path.draw()
-    win.flip()
-
-    event.waitKeys(keyList=['space'])
-
-    #start practice 
-    start_practice_text = visual.TextStim(win, text='Press space bar to start the prictice trials', pos=(0,0), height=25, color='black')
-    start_practice_text.draw()
-    win.flip()
-
-    control_key = event.waitKeys(keyList=['space', 'escape'])
-
-    if control_key[0] == 'space':
-        
-        for trialPrac, audioPrac in zip(trial_range_practice, audio_practice):
-        
-            # Create the stimuli
-            doll = visual.ImageStim(win, image='./practiceTrials/images/Cookie-Monster-smaller.png',pos=(0,300))
-            number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=350, pos=(-10, 0) )
-        
-    
-        
-            # Audio Instantiation
-            audio_Prac = sound.Sound(f"./practiceTrials/audio/{audioPrac}.wav") 
-
-            whichDidYouSee = sound.Sound(f"./audio/Which one did you see.wav")
-       
-            # Target position 
-            target_location = condPrac.loc[trialPrac,'Location']
-            if condPrac.loc[trialPrac,'Location'] == 'left':
-                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=350, pos=(-500, 0))
-                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=350, pos=(450, 0))
-            else:
-                left_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Foil'], color='black', height=350, pos=(-500, 0))
-                right_number = visual.TextStim(win, text=condPrac.loc[trialPrac, 'Target'], color='black', height=350, pos=(450, 0))
-
-       
-            # Display the doll
-            doll.draw()
-            info.draw()
-            win.flip()
-        
-           # control_key = event.waitKeys(keyList=['space'])
-            event.waitKeys(keyList=['space'])
-
-            if control_key[0] == 'space':
-
-                # Display the target number
-                number.draw()
-                
-                #update screen
-                win.flip()
-                
-                # short delay
-                core.wait(1)
-                
-                # Play audio stimulus
-                audio_Prac.play()
-                
-            
-                # Wait for audio to finish playing
-                #core.wait(audio_Prac.getDuration())
-                core.wait(3.5)
-
-                # Animate the plane
-                orientation = choice(orientation_list)
-                if orientation == 'normal':
-                    animation_screen(win, orientation, imgs_n, animation_duration = 4)
-                elif orientation == 'reverse':
-                    animation_screen(win, orientation, imgs_r, animation_duration= 4)
-
-
-                # Display the number and foil
-                left_number.draw()
-                right_number.draw()
-                
-                # Play the "which one did you see? audio"
-                whichDidYouSee.play()
-
-                win.flip()
-       
-          
-                # Wait for a key press
-                start_time = time.time()
-                keys = event.waitKeys(keyList=['left', 'right','escape'])
-                response_time = round((time.time()-start_time), 3)
-                response_key = keys[0]
-            
-            
-                # ACCURACY
-                if response_key == target_location:
-                    accuracy = 1
-                else:
-                    accuracy = 0
-
-
-            # --- animation sequence from here, doesn't have any prevalence on the response time recording.
-
-                # Animate the selected number
-                if response_key == 'left':
-                    selected_number = left_number
-                elif response_key == 'right':
-                    selected_number = right_number
-                elif response_key == 'escape':
-                    print('aborting')
-                
-                
-                
-                    Practice_trial_data = {
-                    
-                    'trial_id': trialPrac,
-                    'condition': CONDITION_NUM,
-                    'num_presentation_type': condPrac.loc[trialPrac, 'Number_type'],
-                    'audio_presentation_context': condPrac.loc[trialPrac, 'Audio'],
-                    'other_features': condPrac.loc[trialPrac, "Other_features"],
-                    'target_number': condPrac.loc[trialPrac, 'Target'],
-                    'foil': condPrac.loc[trialPrac, 'Foil'],
-                    'response_key': response_key,
-                    'response_time': response_time,
-                    'accuracy': accuracy,
-                                    }
-                    Practice_trial_data.append(Practice_trial_data)
-                    
-                    break
-                    
-
-                start_pos = selected_number.pos
-                end_pos = doll.pos
-
-                start_time = time.time()
-                while time.time() - start_time < 1.5:
-                    pos = [start_pos[0] + (end_pos[0] - start_pos[0]) * (time.time() - start_time) / 1.5,
-                            start_pos[1] + (end_pos[1] - start_pos[1]) * (time.time() - start_time) / 1.5]
-                    selected_number.setPos(pos)
-
-                    # Draw the doll and the selected number
-                    doll.draw()
-                    selected_number.draw()
-
-                    # Flip the screen to update the display
-                    win.flip()
-
-            elif control_key[0] == 'escape':
-                return None
-
-
-simulate_trial(win)
-
 path = visual.ImageStim(win, image='./images/giving_token.png',pos=(0,0))
 path.draw()
 #info.draw()
@@ -403,8 +242,8 @@ if control_key[0] == 'space':
     
 
         # Create the stimuli
-        doll = visual.ImageStim(win, image='./images/Cookie-Monster-smaller.png',pos=(0,300))
-        number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(-10, 0) )
+        doll = visual.ImageStim(win, image='./images/Cookie-Monster-smaller.png',pos=(0,0.3))
+        number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(-0.5, 0) )
         
     
         
@@ -416,11 +255,11 @@ if control_key[0] == 'space':
         # Target position 
         target_location = cond.loc[trial,'Location']
         if cond.loc[trial,'Location'] == 'left':
-            left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(-500, 0))
-            right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=350, pos=(450, 0))
+            left_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(-0.5, 0))
+            right_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=350, pos=(0.5, 0))
         else:
-            left_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=350, pos=(-500, 0))
-            right_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(450, 0))
+            left_number = visual.TextStim(win, text=cond.loc[trial, 'Foil'], color='black', height=350, pos=(-0.5, 0))
+            right_number = visual.TextStim(win, text=cond.loc[trial, 'Target'], color='black', height=350, pos=(0.5, 0))
 
        
         # Display the doll
