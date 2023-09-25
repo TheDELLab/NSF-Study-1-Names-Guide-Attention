@@ -9,7 +9,7 @@
 # and shows a red pointer at the gaze position using PsychoPy and EyeLink.
 
 import pylink
-from psychopy import visual, core, event, clock
+from psychopy import visual, core, event
 from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
 
 # Connect to the tracker
@@ -78,9 +78,6 @@ welcome_displayed = False
 # Initialize a variable to track whether the gaze is on the Cookie Monster
 gaze_on_cookie_monster = False
 
-# Initialize a clock to measure the duration of gaze on the Cookie Monster
-gaze_start_time = None
-
 # Initialize a variable to track the state of the program
 program_state = 'running'
 
@@ -108,15 +105,6 @@ while program_state == 'running':
         
         # Check if gaze is within the bounding box of the Cookie Monster image
         if cookie_monster_bbox.contains(psycho_x, psycho_y):
-            # Start timing the gaze duration on the Cookie Monster
-            if not gaze_on_cookie_monster:
-                gaze_start_time = clock.getTime()
-            gaze_on_cookie_monster = True
-        else:
-            gaze_on_cookie_monster = False
-        
-        # If gaze has been on the Cookie Monster for more than 2 seconds, display "Welcome" text
-        if gaze_on_cookie_monster and (clock.getTime() - gaze_start_time >= 2):
             # Display the "Welcome" text and change program state
             if not welcome_displayed:
                 welcome_text.draw()
