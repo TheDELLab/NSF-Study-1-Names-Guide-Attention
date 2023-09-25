@@ -56,6 +56,9 @@ red_pointer = visual.Circle(win, radius=5, fillColor='red', lineColor='red')
 # Create a "Welcome" text stimulus
 welcome_text = visual.TextStim(win, text='Welcome', pos=(0, -50), height=40, color='white')
 
+# Define the bounding box around the Cookie Monster image
+cookie_monster_bbox = visual.Rect(win, width=200, height=200, pos=cookie_monster_img.pos)
+
 # Put tracker in Offline mode before we start recording
 tk.setOfflineMode()
 
@@ -65,11 +68,8 @@ tk.startRecording(1, 1, 1, 1)
 # Cache some samples
 pylink.msecDelay(100)
 
-# Initialize a variable to track whether the welcome text is displayed
+# Initialize a variable to track whether the "Welcome" text is displayed
 welcome_displayed = False
-
-# Initialize a variable to track whether the gaze is on the Cookie Monster
-gaze_on_cookie_monster = False
 
 # Show the Cookie Monster image at the beginning of the experiment
 cookie_monster_img.draw()
@@ -93,18 +93,9 @@ while not event.getKeys():
         red_pointer.pos = (psycho_x, psycho_y)
         red_pointer.draw()
         
-        # Check if the red pointer is over the Cookie Monster image
-        if (
-            -100 <= psycho_x <= 100 and 
-            SCN_H / 2 - 200 <= psycho_y <= SCN_H / 2
-        ):
-            # Display the "Welcome" text only when gaze is on the Cookie Monster
-            gaze_on_cookie_monster = True
-        else:
-            gaze_on_cookie_monster = False
-        
-        # Display the "Welcome" text if gaze is on the Cookie Monster
-        if gaze_on_cookie_monster:
+        # Check if gaze is within the bounding box of the Cookie Monster image
+        if cookie_monster_bbox.contains(psycho_x, psycho_y):
+            # Display the "Welcome" text
             if not welcome_displayed:
                 welcome_text.draw()
                 win.flip()
