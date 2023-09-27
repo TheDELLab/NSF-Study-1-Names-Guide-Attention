@@ -76,10 +76,12 @@ while not event.getKeys():
         elif smp.isLeftSample():
             gaze_x, gaze_y = smp.getLeftEye().getGaze()
         
-        print(f"gaze_x: {gaze_x}, gaze_y: {gaze_y}")
+#        print(f"gaze_x: {gaze_x}, gaze_y: {gaze_y}")
         
         # Draw the red pointer at the gaze position
         red_pointer.pos = (gaze_x - SCN_W / 2.0, SCN_H / 2.0 - gaze_y)
+        print("psychopy coordinates : x={gaze_x - SCN_W / 2.0}, y={SCN_H / 2.0 - gaze_y}")
+        
         red_pointer.draw()
         
         win.flip()
