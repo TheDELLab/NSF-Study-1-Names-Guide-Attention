@@ -9,8 +9,11 @@
 # and shows a red pointer at the gaze position using PsychoPy and EyeLink.
 
 import pylink
-from psychopy import visual, core, event
+from psychopy import visual, core, sound, event, gui, data
+import pandas as pd 
 from EyeLinkCoreGraphicsPsychoPy import EyeLinkCoreGraphicsPsychoPy
+
+
 
 # Connect to the tracker
 tk = pylink.EyeLink('100.1.1.1')
@@ -46,22 +49,9 @@ calib_msg.draw()
 win.flip()
 tk.doTrackerSetup()
 
-# Load the Cookie Monster image
-cookie_monster_img = visual.ImageStim(win, image='cookie_monster.jpg', size=(200, 200))
-cookie_monster_img.pos = (0, SCN_H / 2 - 100)  # Position at the top center
-
 # Create a red pointer stimulus
 red_pointer = visual.Circle(win, radius=5, fillColor='red', lineColor='red')
 
-# Create a "Welcome" text stimulus
-welcome_text = visual.TextStim(win, text='Welcome', pos=(0, -50), height=40, color='white')
-
-# Create two different sentences of text
-sentence1 = visual.TextStim(win, text='Sentence 1', pos=(0, -50), height=40, color='white')
-sentence2 = visual.TextStim(win, text='Sentence 2', pos=(0, -50), height=40, color='white')
-
-# Define the bounding box around the Cookie Monster image
-cookie_monster_bbox = visual.Rect(win, width=200, height=200, pos=cookie_monster_img.pos)
 
 # Put tracker in Offline mode before we start recording
 tk.setOfflineMode()
@@ -71,20 +61,6 @@ tk.startRecording(1, 1, 1, 1)
 
 # Cache some samples
 pylink.msecDelay(100)
-
-# Initialize a variable to track whether the "Welcome" text is displayed
-welcome_displayed = False
-
-# Initialize a variable to track whether the gaze is on the Cookie Monster
-gaze_on_cookie_monster = False
-
-# Initialize a variable to track the state of the program
-program_state = 'running'
-
-# Show the Cookie Monster image at the beginning of the experiment
-cookie_monster_img.draw()
-win.flip()
-
 # Show the red pointer at the gaze coordinates
 while program_state == 'running':
     # Check for new samples 
@@ -109,22 +85,84 @@ while program_state == 'running':
             if not welcome_displayed:
                 welcome_text.draw()
                 win.flip()
+                core.wait(2)
                 welcome_displayed = True
-                program_state = 'welcome'
+                program_state = 'start'
         else:
             welcome_displayed = False
         
         win.flip()
 
 # Display the sentences based on the program state
-if program_state == 'welcome':
-    core.wait(1)  # Display "Welcome" text for 1 second
-    sentence1.draw()
-    win.flip()
-    core.wait(1)  # Display Sentence 1 for 1 second
-    sentence2.draw()
-    win.flip()
-    core.wait(1)  # Display Sentence 2 for 1 second
+if program_state == 'start':
+    for iteration in range(4):
+    
+        # Shuffle
+        test_df = test_df.sample(frac=1)
+        train_df = train_df.sample(frac=1)
+        
+
+        training_phase_text.draw()
+        win.flip()
+        control = event.waitKeys(keyList=['space'])
+
+        if control[0] == 'space':
+            
+            
+            for i,row in enumerate(train_df.iterrows(),1):
+                block_data = {}
+                block_data['block'] = iteration + 1 
+                block_data['trial'] = i
+                
+                
+                trial_data = row[1]
+                if choice_data[0] == "Condition 1":
+                    CONDITION = 1 
+                    condition_column = "Condition 1"
+                else:
+                    CONDITION = 2
+                    condition_column = "Condition 2"
+                audio_path = os.path.join('Audio',trial_data[condition_column] + '.wav')
+                
+                block_data['audio'] = audio_path[:-4]
+        
+                sound_stim = sound.Sound(audio_path)
+                images = trial_data['Visual'].split(',')
+                
+                for j, image in enumerate(images,1):
+                    block_data[f"S{j}"] = image
+                    
+                
+                num_images = len(images)
+                spacing = 70  # Adjust the spacing between images as needed
+                total_width = (num_images - 1) * spacing
+                start_x = -total_width / 2
+                
+                # Create a list of ImageStim objects with appropriate positions
+                image_stims = []
+                
+                for image_name, i in zip(images, range(num_images)):
+                    image_path = os.path.join('Images', image_name.strip())
+                    x = start_x + i * spacing
+                    image_stim = visual.ImageStim(win, image=image_path, pos=(x, 0), size=(61, 61))
+                    image_stims.append(image_stim)
+                
+                
+                # Presenting Images
+                sound_stim.play()
+                for image_stim in image_stims:
+                    image_stim.draw()
+                    
+                win.flip()
+                    
+                
+                BLOCK_DATA_TRAIN.append(block_data)
+                keys = event.waitKeys(keyList=['space']) 
+                
+        
+    
+
+   
 
 # Stop recording
 tk.stopRecording()

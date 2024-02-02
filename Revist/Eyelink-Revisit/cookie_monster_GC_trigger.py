@@ -109,7 +109,6 @@ while not event.getKeys():
             display_experiment_status(win)
             
             
-            
         
     
 # Stop recording

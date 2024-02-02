@@ -1,0 +1,2 @@
+trial_id,condition,num_presentation_type,audio_presentation_context,other_features,target_number,accuracy,foil,response_key,response_time
+14,1,3 digits,four hundred and thirty eight,swap_1_3,438,0,834,escape,5.508

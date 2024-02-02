@@ -1,0 +1,5 @@
+﻿Trials,Target_image,Foil_image,Target_audio_cond1,Target_audio_cond2,Target_Location,Answer,Response_Time
+1,"Picture1.png, Picture1.png","Picture1.png, Picture2.png",ti bo ti,ta ,left,right,0.812317374999111
+2,"Picture1.png, Picture2.png, Picture2.png","Picture1.png, Picture2.png, Picture1.png",ti zu bi bo bi,ga,right,left,4.425216625000758
+3,"Picture1.png, Picture2.png","Picture1.png, Picture2.png, Picture1.png",ti bo bi,bla ,left,right,2.3607211249982356
+4,"Picture1.png, Picture2.png, Picture1.png","Picture1.png, Picture1.png",ti zu bi bo ti,za,right,left,2.8979323330058833
