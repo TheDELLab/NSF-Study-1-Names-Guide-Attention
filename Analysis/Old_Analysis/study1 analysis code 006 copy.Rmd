@@ -1,0 +1,135 @@
+---
+title: "Study 1 Analysis Code"
+output: html_document
+date: "2023-10-18"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("here")
+library("tidyverse")
+library("afex")
+library("ggplot2")
+library("car")
+library(tidyr)
+```
+
+
+
+## Load data
+```{r}
+
+#read in datavyu csv export
+
+data_006 = read.csv("datavyuExports/export_delayed_match_006_LV.csv")
+
+#change column names to be more understandable
+
+colnames(data_006) <- c("time", "gazeOrdinal", "gazeOnsetTime", "gazeOffsetTime", "AOI", "trialNumber", "trialOnset", "trialOffset", "targetNumber")
+
+#View(data_006)
+
+#function to remove empty cells according to which rows are empty in POI_lable column:
+remove_empty_gaze_pos_rows <- function(df) {
+    # Ensure the dataframe has the 'POI_lable' column
+    if (!"POI_lable" %in% names(df)) {
+        stop("'POI_lable' column not found in the dataframe.")
+    }
+    
+    # Remove rows where 'POI_lable' is empty
+    cleaned_data <- df[!is.na(df$`POI_lable`) & df$`POI_lable` != "", ]
+    
+    return(cleaned_data)
+}
+
+#call function to remove empty cells:
+cleaned_data <- remove_empty_gaze_pos_rows(data_006)
+
+View(cleaned_data)
+
+#export new cleaned file
+write.csv(cleaned_data, "cleaned_file_006.csv", row.names = FALSE)
+
+
+```
+
+
+```{r}
+
+
+# Load the new data
+data_new <- read.csv("condensed_gaze_data_11_14.csv")
+
+#View(data_new)
+
+# Create the horizontal stacked bar chart
+
+# Normalize time data
+data_new <- data_new %>%
+  mutate(
+    normalized_start = (firstPointGazeOnsetTime - trialOnset) / totalTrialDuration * 4500,
+    normalized_end = (lastPointGazeOffsetTime - trialOnset) / totalTrialDuration * 4500,
+    normalized_word_onset = (wordOnset - trialOnset) / totalTrialDuration * 4500
+  )
+
+# Create a dataframe for distinct words
+distinct_words <- data_new %>%
+  select(trialNumber, word, normalized_word_onset) %>%
+  distinct(trialNumber, word, .keep_all = TRUE)
+
+# Combine distinct_words with data_new
+data_combined <- data_new %>%
+  left_join(distinct_words, by = c("trialNumber", "normalized_word_onset"))
+
+# Set the colors for each AOI label
+colors <- c("red", "green", "blue", "yellow", "orange", "purple", "brown", "pink") # Modify as needed
+
+# Plotting the data using ggplot2
+p <- ggplot(data_new, aes(ymin=trialNumber - 0.4, ymax=trialNumber + 0.4, xmin=normalized_start, xmax=normalized_end, fill=AOI_lable)) +
+  geom_rect() +
+  scale_fill_manual(values=colors) +
+  labs(x="Time (ms)", y="Trial Number", fill="AOI Label") +
+  theme_minimal()
+
+# Add word annotations
+# Adjust vjust to position the labels below the bars
+p <- p + geom_text(aes(x = normalized_word_onset, y = trialNumber, label = word), vjust = 1.5, size = 2)
+
+
+# Print the plot
+print(p)
+
+
+```
+
+```{r}
+# Load the new data
+data_new <- read.csv("condensed_gaze_data_11_14.csv")
+
+# Normalize time data
+data_new <- data_new %>%
+  mutate(
+    normalized_start = (firstPointGazeOnsetTime - trialOnset) / totalTrialDuration * 5000,
+    normalized_end = (lastPointGazeOffsetTime - trialOnset) / totalTrialDuration * 5000,
+    normalized_word_onset = (wordOnset - trialOnset) / totalTrialDuration * 5000,
+    normalized_word_end = normalized_word_onset + wordDuration # Replace 'wordDuration' with the actual column name for word duration
+  )
+
+# Set the colors for each AOI label
+colors <- c("red", "green", "blue", "yellow", "orange", "purple", "brown", "pink") # Modify as needed
+
+# Plotting the data using ggplot2
+p <- ggplot(data_new, aes(ymin=trialNumber - 0.2, ymax=trialNumber + 0.2, xmin=normalized_start, xmax=normalized_end, fill=AOI_label)) +
+  geom_rect() +
+  scale_fill_manual(values=colors) +
+  labs(x="Time (ms)", y="Trial Number", fill="AOI Label") +
+  theme_minimal()
+
+# Add lines for word durations
+#p <- p + geom_segment(aes(x = normalized_word_onset, xend = normalized_word_end, y = trialNumber, yend = trialNumber), color="black", size=1)
+
+# Print the plot
+print(p)
+```

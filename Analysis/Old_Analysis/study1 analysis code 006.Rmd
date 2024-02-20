@@ -1,0 +1,215 @@
+---
+title: "Study 1 Analysis Code"
+output: html_document
+date: "2023-10-18"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("here")
+library("tidyverse")
+library("afex")
+library("ggplot2")
+library("car")
+library(tidyr)
+```
+
+
+
+## Load data
+```{r}
+
+#read in datavyu csv export
+
+data_006 = read.csv("datavyuExports/export_delayed_match_006_LV.csv")
+
+#change column names to be more understandable
+
+colnames(data_006) <- c("frameNumber", "time", "gazeOrdinal", "gazeOnsetTime", "gazeOffsetTime", "POI_lable", "trialNumber", "trialOnset", "trialOffset", "targetNumber")
+
+#View(data_006)
+
+#function to remove empty cells according to which rows are empty in POI_lable column:
+remove_empty_gaze_pos_rows <- function(df) {
+    # Ensure the dataframe has the 'POI_lable' column
+    if (!"POI_lable" %in% names(df)) {
+        stop("'POI_lable' column not found in the dataframe.")
+    }
+    
+    # Remove rows where 'POI_lable' is empty
+    cleaned_data <- df[!is.na(df$`POI_lable`) & df$`POI_lable` != "", ]
+    
+    return(cleaned_data)
+}
+
+#call function to remove empty cells:
+cleaned_data <- remove_empty_gaze_pos_rows(data_006)
+
+View(cleaned_data)
+
+#export new cleaned file
+write.csv(cleaned_data, "cleaned_file_006.csv", row.names = FALSE)
+
+
+```
+
+```{r}
+df <- read.csv("cleaned_file_006.csv")
+
+df <- df[order(df$trialNumber, df$gazeOnsetTime), ] # Sort the data
+df$gazeDuration <- df$gazeOffsetTime - df$gazeOnsetTime
+df$cum_duration <- ave(df$gazeDuration, df$trialNumber, FUN=cumsum) - df$gazeDuration
+
+df
+
+# Group the data to get one targetNumber per trialNumber
+label_data <- df[!duplicated(df$trialNumber), ]
+
+# Colors for each category
+colors <- c("l" = "green", "r" = "red", "m" = "blue", "n" = "cyan", "i" = "magenta")
+
+# Plot the data using ggplot2
+p <- ggplot(df, aes(ymin=trialNumber - 0.4, ymax=trialNumber + 0.4, xmin=cum_duration, xmax=cum_duration + gazeDuration, fill=POI_lable)) +
+  geom_rect() +
+  geom_text(data = label_data, aes(x = max(df$cum_duration + df$gazeDuration) + 500, y = trialNumber, label = targetNumber), hjust = 0) +  # Adjust the 500 value as needed
+  scale_fill_manual(values=colors) +
+  labs(x="Time", y="Trial Number", fill="Categories") +
+  theme_minimal()
+
+print(p)
+```
+
+
+
+```{r}
+#Basic POI_Lable count & duration totals viz 
+
+# Read the data
+df_basic_summary <- read.csv("cleaned_file_006.csv")
+
+# Compute the duration for each POI_lable
+df_basic_summary$duration <- df_basic_summary$gazeOffsetTime - df_basic_summary$gazeOnsetTime
+
+# Colors for each category (you can adjust these as needed)
+colors <- c("l" = "green", "r" = "red", "m" = "blue", "n" = "cyan", "i" = "magenta", "nl" = "yellow")
+
+# 2. Counts of POI_lable: How many times each label appeared across all trials.
+label_counts <- as.data.frame(table(df_basic_summary$POI_lable))
+
+# Plotting the bar chart for label counts
+p3 <- ggplot(label_counts, aes(x=Var1, y=Freq, fill=Var1)) +
+  geom_bar(stat="identity") +
+  geom_text(aes(label=Freq), vjust=-0.5) + # Add value labels
+  labs(title="Counts of each POI_lable", x="POI_lable", y="Count") +
+  scale_fill_manual(values=colors) +
+  theme_minimal()
+
+# Display the plot for label counts
+print(p3)
+
+# 3. Total Duration (in milliseconds) per POI_lable: Sum of the durations for each label across all trials.
+total_duration_per_label <- aggregate(duration ~ POI_lable, df_basic_summary, sum)
+
+# Plotting the bar chart for total duration
+p4 <- ggplot(total_duration_per_label, aes(x=POI_lable, y=duration, fill=POI_lable)) +
+  geom_bar(stat="identity") +
+  geom_text(aes(label=duration), vjust=-0.5) + # Add value labels
+  labs(title="Total Duration of each POI_lable", x="POI_lable", y="Total Duration (ms)") +
+  scale_fill_manual(values=colors) +
+  theme_minimal()
+
+# Display the plot for total duration
+print(p4)
+
+
+```
+
+```{r}
+# Grouped bar graphs showing the percentage of POI_lable per trial 
+# WIP: the trials seem to be different time lengths... should be consistent 4000 ms 
+
+# Read the data
+df_basic_summary <- read.csv("cleaned_file_006.csv")
+
+# Compute the duration for each POI_lable
+df_basic_summary$duration <- df_basic_summary$gazeOffsetTime - df_basic_summary$gazeOnsetTime
+
+# Calculate the total gaze duration for each POI_lable within each trial
+total_duration_per_label_per_trial <- aggregate(duration ~ trialNumber + POI_lable, df_basic_summary, sum)
+
+# Calculate the total gaze duration for each trial
+total_duration_per_trial <- aggregate(duration ~ trialNumber, df_basic_summary, sum)
+
+# Merge the dataframes to get total duration per trial for each POI_lable
+df_merged <- merge(total_duration_per_label_per_trial, total_duration_per_trial, by="trialNumber")
+
+# Compute the percentage
+df_merged$percentage <- (df_merged$duration.x / df_merged$duration.y) * 100
+
+# Merge with the original dataframe to get the targetNumber for each trial
+df_merged <- merge(df_merged, unique(df_basic_summary[, c("trialNumber", "targetNumber")]), by="trialNumber")
+
+# Filter data based on the number of digits in targetNumber
+df_2_digits <- df_merged[nchar(as.character(df_merged$targetNumber)) == 2,]
+df_3_digits <- df_merged[nchar(as.character(df_merged$targetNumber)) == 3,]
+
+# Colors for each category (you can adjust these as needed)
+colors <- c("l" = "green", "r" = "red", "m" = "blue", "n" = "cyan", "i" = "magenta", "nl" = "yellow")
+
+# Plotting the grouped bar graph for 2-digit targetNumber
+p1 <- ggplot(df_2_digits, aes(x=factor(trialNumber), y=percentage, fill=POI_lable)) +
+  geom_bar(stat="identity", position="dodge") +
+  labs(title="Percentage of each POI_lable in each trial (2-digit targetNumber)", x="Trial Number", y="Percentage") +
+  scale_fill_manual(values=colors) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Display the plot for 2-digit targetNumber
+print(p1)
+
+# Plotting the grouped bar graph for 3-digit targetNumber
+p2 <- ggplot(df_3_digits, aes(x=factor(trialNumber), y=percentage, fill=POI_lable)) +
+  geom_bar(stat="identity", position="dodge") +
+  labs(title="Percentage of each POI_lable in each trial (3-digit targetNumber)", x="Trial Number", y="Percentage") +
+  scale_fill_manual(values=colors) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Display the plot for 3-digit targetNumber
+print(p2)
+
+# Plotting the grouped bar graph for total trials
+p3 <- ggplot(df_merged, aes(x=factor(trialNumber), y=percentage, fill=POI_lable)) +
+  geom_bar(stat="identity", position="dodge") +
+  labs(title="Percentage of each POI_lable in each trial", x="Trial Number", y="Percentage") +
+  scale_fill_manual(values=colors) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Display the plot for the total trials by POI_lable type 
+print(p3)
+
+```
+
+```{r}
+# Read the data and compute duration for each POI_label
+df_basic_summary <- read.csv("cleaned_file_006.csv")
+df_basic_summary$duration <- with(df_basic_summary, gazeOffsetTime - gazeOnsetTime)
+
+# Calculate and print the percentage of each POI_label used in each trial
+df_merged <- merge(
+  aggregate(duration ~ trialNumber + POI_lable, df_basic_summary, sum),
+  aggregate(duration ~ trialNumber, df_basic_summary, sum),
+  by = "trialNumber"
+)
+df_merged$percentage <- (df_merged$duration.x / df_merged$duration.y) * 100
+print(df_merged[, c("trialNumber", "POI_lable", "percentage")])
+
+# Calculate and print the percentage of each POI_label used across all trials
+total_duration_per_label <- aggregate(duration ~ POI_lable, df_basic_summary, sum)
+total_duration_per_label$percentage <- (total_duration_per_label$duration / sum(df_basic_summary$duration)) * 100
+print(total_duration_per_label[, c("POI_lable", "percentage")])
+
+```

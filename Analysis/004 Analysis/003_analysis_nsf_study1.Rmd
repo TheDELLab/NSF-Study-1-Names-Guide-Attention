@@ -1,0 +1,284 @@
+---
+title: "002_analysis_nsf_study1"
+output: html_document
+date: "2023-12-11"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("here")
+library("tidyverse")
+library("afex")
+library("ggplot2")
+library("car")
+```
+
+#load audacity data
+```{r}
+# Read the 002 participant data file
+word_labels <- read_csv("raw_data_exports/002_audacity_lables.csv", show_col_types = FALSE)
+
+#convert seconds to milliseconds to match datavyu timestamps 
+word_labels$Word_Onset = word_labels$word_onset * 1000
+word_labels$Word_Offset = word_labels$word_offset * 1000
+
+#get individual word durations
+word_labels$Word_Duration = word_labels$Word_Offset - word_labels$Word_Onset
+
+print(word_labels)
+#write.csv(word_labels, "clean_data_exports/002_word_labels.csv")
+
+#get total utterance duration (onset and offest of utterances)
+group_by_trial_words <- word_labels %>%
+  group_by(number) %>%
+  summarise(
+    Utterance_Onset = first(Word_Onset),
+    Utterance_Offset = last(Word_Offset),
+    Utterance_Duration = Utterance_Offset - Utterance_Onset,
+  )
+
+word_label_export_cleaned <- word_labels %>%
+  left_join(group_by_trial_words, by = "number", "word")
+
+print(word_label_export_cleaned)
+write.csv(word_labels, "clean_data_exports/002_word_labels.csv")
+```
+#load datavyu data
+```{r}
+
+exported_datavyu <- na.omit(read.csv("raw_data_exports/003_datavyu_labels_HK.csv"))
+
+# Rename AOI labels
+exported_datavyu <- exported_datavyu %>%
+  mutate(AOI = case_when(
+    AOI == "n" ~ "not looking",
+    AOI == "i" ~ "inbetween",
+    AOI == "l" ~ "left",
+    AOI == "r" ~ "right",
+    AOI == "m" ~ "middle",
+    TRUE ~ AOI  # This retains the original value if it doesn't match any criteria
+  ))
+
+group_by_trial_gaze <- exported_datavyu %>%
+  group_by(trials.number) %>%
+  summarise(trial_duration = first(trials.offset) - first(trials.onset))
+
+print(group_by_trial_gaze)
+
+datavyu_export <- exported_datavyu %>%
+  left_join(group_by_trial_gaze, by = "trials.number")
+
+print(datavyu_export)
+
+write.csv(datavyu_export, "clean_data_exports/002_gaze_event_labels.csv")
+```
+
+
+#merge audacity & datavyu data
+```{r}
+# Read the CSV files
+gaze_event_labels <- read.csv("clean_data_exports/002_gaze_event_labels.csv")
+word_labels <- read.csv("clean_data_exports/002_word_labels.csv")
+
+# Round the Word_Onset and Word_Offset times
+word_labels$Word_Onset <- round(word_labels$Word_Onset)
+word_labels$Word_Offset <- round(word_labels$Word_Offset)
+
+# Initialize the word columns in exported_datavyu
+gaze_event_labels$word_onset <- NA
+gaze_event_labels$word_offset <- NA
+gaze_event_labels$word <- NA
+
+# Iteratively assign word values
+for (i in 1:nrow(gaze_event_labels)) {
+  for (j in 1:nrow(word_labels)) {
+    if (gaze_event_labels$time[i] >= word_labels$Word_Onset[j] &&
+        gaze_event_labels$time[i] <= word_labels$Word_Offset[j] &&
+        gaze_event_labels$trials.number[i] == word_labels$number[j]) {
+      
+      gaze_event_labels$word_onset[i] <- word_labels$Word_Onset[j]
+      gaze_event_labels$word_offset[i] <- word_labels$Word_Offset[j]
+      gaze_event_labels$word[i] <- as.character(word_labels$word[j])
+      break  # Exit the inner loop once a match is found
+    }
+  }
+}
+
+# View the result
+print(gaze_event_labels)
+#write.csv(gaze_event_labels, "merged_1_15.csv")
+
+```
+
+#normalizing the onset & offest of each word label and gaze event to be from a trial start time of zero
+```{r}
+# Adjusting word onset and offset times relative to trial start, and calculating label positions
+new_word_onset <- gaze_event_labels %>%
+  group_by(trials.ordinal) %>%  # Group data by trial ID to perform operations within each trial
+  mutate(
+    # Adjust word onset to start time relative to the beginning of the trial
+    Adjusted_Word_Onset = word_onset - trials.onset,
+    # Adjust word offset to end time relative to the beginning of the trial
+    Adjusted_Word_Offset = word_offset - trials.onset,
+    # Calculate the label position as the midpoint between the adjusted onset and offset times
+    Label_Position = (Adjusted_Word_Onset + Adjusted_Word_Offset) / 2
+  ) %>%
+  ungroup()
+
+# Add new columns
+gaze_event_labels$Adjusted_Word_Onset <- new_word_onset$Adjusted_Word_Onset
+gaze_event_labels$Adjusted_Word_Offset <- new_word_onset$Adjusted_Word_Offset
+gaze_event_labels$Label_Position <- new_word_onset$Label_Position
+
+
+# Print the modified datasets
+#print(new_word_onset)
+#print(gaze_event_labels)
+
+# Adjusting gaze onset and offset times relative to trial start
+
+# Calculate individual gaze event durations before grouping
+individual_gaze_events <- gaze_event_labels %>%
+  mutate(gazeEventIndividualDuration = gaze_pos.offset - gaze_pos.onset)
+
+gaze_event_labels$Individual_Gaze_Durations <- individual_gaze_events$gazeEventIndividualDuration
+
+# Calculate normalized times for individual gaze events
+new_gaze_event_onset_offest <- gaze_event_labels %>%
+  mutate(
+    Adjusted_Gaze_Start = (gaze_pos.onset - trials.onset), 
+    Adjusted_Gaze_End = (gaze_pos.offset - trials.onset),
+  )
+
+gaze_event_labels$Adjusted_Gaze_Start <- new_gaze_event_onset_offest$Adjusted_Gaze_Start
+gaze_event_labels$Adjusted_Gaze_End <- new_gaze_event_onset_offest$Adjusted_Gaze_End
+
+print(gaze_event_labels)
+
+write.csv(gaze_event_labels, "clean_data_exports/002_gaze_word_merged_labels.csv")
+
+```  
+
+
+#viz of word label events over each trial  
+```{r}
+
+# Plotting, adding na.rm = TRUE to geom_text() to ignore NA values in label positions
+word_label_stacked_chart <- ggplot(gaze_event_labels, aes(y = trials.ordinal, x = Adjusted_Word_Onset, xend = Adjusted_Word_Offset, color = word)) +
+  geom_segment(aes(yend = trials.ordinal), size = 5, na.rm = TRUE) +
+  geom_text(aes(y = trials.ordinal, x = Label_Position, label = word), vjust = 0.5, size = 3, color = "gray22", na.rm = TRUE) +
+  theme_minimal() +
+  labs(x = "Time Since Trial Start (ms)", y = "Trial Number") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+# Display the plot
+print(word_label_stacked_chart)
+
+```
+
+```{r}
+#THIS WORKS WITHOUT LINES
+
+# Set the colors for each AOI label
+colors <- c("red", "green", "blue", "yellow", "orange", "purple", "brown", "pink") # Modify as needed
+
+overlap_adjustment <- 0.5
+
+# Plotting each individual gaze event using ggplot2 with slight overlap
+p <- ggplot(gaze_event_labels, aes(ymin=trials.ordinal - 0.4, ymax=trials.ordinal + 0.4, xmin=Adjusted_Gaze_Start - overlap_adjustment, xmax=Adjusted_Gaze_End + overlap_adjustment, fill=AOI)) +
+  geom_rect() +
+  scale_fill_manual(values=colors) +
+  labs(x="Normalized Time", y="Trial Number", fill="AOI Label") +
+  theme_minimal()
+
+# Print the plot
+print(p)
+print(gaze_event_labels)
+
+```
+```{r}
+#THIS WORKS WITH HUNDRED LINE
+
+# Filter for the word "hundred" and calculate the average onset time
+average_hundred_onset <- gaze_event_labels %>%
+  filter(word == "hundred") %>%
+  summarise(average_onset = mean(Adjusted_Word_Onset, na.rm = TRUE)) %>%
+  pull(average_onset)
+
+# Existing ggplot2 code for plotting
+p <- ggplot(gaze_event_labels, aes(ymin=trials.ordinal - 0.4, ymax=trials.ordinal + 0.4, xmin=Adjusted_Gaze_Start, xmax=Adjusted_Gaze_End, fill=AOI)) +
+  geom_rect() +
+  scale_fill_manual(values=colors) +
+  labs(x="Normalized Time", y="Trial Number", fill="AOI Label") +
+  theme_minimal()
+
+# Add a vertical line for the average onset time of the word "hundred"
+p <- p + geom_vline(xintercept = average_hundred_onset, linetype="dashed", color="black", size=1) +
+  annotate("text", x = average_hundred_onset, y = max(gaze_event_labels$trials.ordinal), label = "hundred", vjust = -1)
+
+# Print the plot
+print(p)
+
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+# Assuming 'gaze_event_labels' is already read and contains 'trials.number', 'Adjusted_Word_Onset', etc.
+
+# Function to categorize trial numbers into 2-digit and 3-digit
+categorize_trial_number <- function(trial_number) {
+  if (nchar(as.character(trial_number)) == 2) {
+    return("2-digit")
+  } else {
+    return("3-digit")
+  }
+}
+
+# Add a new column to categorize each trial number
+word_labels_2 <- gaze_event_labels %>%
+  mutate(trial_category = sapply(trials.number, categorize_trial_number))
+
+# Calculate the average word_onset times for both categories
+average_decade_onsets <- word_labels_2 %>%
+  group_by(trial_category) %>%
+  summarise(average_word_onset = mean(Adjusted_Word_Onset, na.rm = TRUE))
+
+# View the result
+print(average_decade_onsets)
+
+# Assuming 'colors' is predefined. If not, you might need to define it or adjust the plot accordingly.
+# Example: colors <- c("2-digit" = "blue", "3-digit" = "red")
+
+# Existing ggplot2 code for plotting
+b <- ggplot(gaze_event_labels, aes(ymin=trials.ordinal - 0.4, ymax=trials.ordinal + 0.4, xmin=Adjusted_Gaze_Start, xmax=Adjusted_Gaze_End, fill=AOI)) +
+  geom_rect() +
+  scale_fill_manual(values=colors) +
+  labs(x="Normalized Time", y="Trial Number", fill="AOI Label") +
+  theme_minimal()
+
+
+# Extract average onset times for each category
+avg_onset_2_digit <- average_decade_onsets$average_word_onset[average_decade_onsets$trial_category == "2-digit"]
+avg_onset_3_digit <- average_decade_onsets$average_word_onset[average_decade_onsets$trial_category == "3-digit"]
+
+# Maximum y position for annotations
+max_y_position <- max(gaze_event_labels$trials.ordinal)
+
+# Add vertical lines and annotations for 2-digit and 3-digit categories
+b <- b + geom_vline(xintercept = avg_onset_2_digit, linetype="dashed", size=1, color="blue") +
+  geom_vline(xintercept = avg_onset_3_digit, linetype="dashed", size=1, color="red") +
+  annotate("text", x = avg_onset_2_digit, y = max_y_position, label = "dec(2d)", vjust = -1, color="blue") +
+  annotate("text", x = avg_onset_3_digit, y = max_y_position, label = "dec(3d)", vjust = -1, color="red")
+
+# Print the plot
+print(b)
+
+
+```
+
+

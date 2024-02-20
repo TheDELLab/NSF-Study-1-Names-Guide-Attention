@@ -1,0 +1,178 @@
+---
+title: "Study 1 Analysis Code"
+output: html_document
+date: "2023-10-18"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("here")
+library("tidyverse")
+library("afex")
+library("ggplot2")
+library("car")
+library(tidyr)
+library(dplyr)
+```
+
+
+```{r} 
+# not sure if working but saving mapping code here...
+
+# Function to Clean Each File
+clean_data_file <- function(filename) {
+  
+  #folder_path <- "datavyuExports"
+
+  # Read the data
+  df_datavyu <- read.csv(filename)
+  
+  # Change column names
+  colnames(df_datavyu) <- c("frameNumber", "time", "gazeOrdinal", "pointGazeOnsetTime", "pointGazeOffsetTime", "AOI_lable", "trialNumber", "trialOnset", "trialOnset", "trialOffset", "targetNumber")
+  
+  # Remove empty gaze positions
+  cleaned_data <- df_datavyu %>%
+    filter(!is.na(POI_lable) & POI_lable != "")
+  
+  # Construct the output filename for cleaned data
+  output_filename <- paste0("cleanedFiles/cleaned_", basename(filename))
+  
+  # Export cleaned data
+  write.csv(cleaned_data, output_filename, row.names = FALSE)
+  
+}
+
+```
+
+
+
+```{r}
+# Function to map AOI labels
+map_aoi_labels <- function(label) {
+  label_mappings <- list(
+    "l" = "left",
+    "r" = "right",
+    "m" = "middle",
+    "i" = "inBetween",
+    "n" = "notLooking"
+  )
+  return(ifelse(is.null(label_mappings[[label]]), label, label_mappings[[label]]))
+}
+
+# Read the CSV file
+data <- read.csv("path_to_your_file.csv")
+
+# Apply the mapping to the 'POI_lable' column
+data$AOI_lable <- sapply(data$AOI_lable, map_aoi_labels)
+
+# Save the modified dataframe to a new CSV file
+write.csv(data, "path_to_new_file.csv", row.names = FALSE)
+
+# Also adding this...Add the 'pointGazeDuration' column (for getting the right event durations)
+data <- mutate(data, pointGazeDuration = pointGazeOffsetTime - pointGazeOnsetTime)
+
+# Check if any pointGazeDuration values are not equal to 32
+if (any(data$pointGazeDuration != 32)) {
+  warning("There are durations that are not equal to 32 ms")
+}
+
+```
+
+```{r}
+
+# Load the data
+mapped_data <- read_csv("updated_mapped_data_with_pointGazeDuration.csv")
+
+mapped_data$pointGazeDuration <- mapped_data$pointGazeOffsetTime - mapped_data$pointGazeOnsetTime
+
+mapped_data$totalTrialDuration <- mapped_data$trialOffset - mapped_data$trialOnset
+
+mapped_data$delayDuration = mapped_data$pointGazeOnsetTime - mapped_data$trialOnset
+
+#mapped_data$wordDuration = mapped_data$pointGazeOnsetTime - mapped_data$trialOnset
+
+
+#View(mapped_data)
+
+# Transform the data
+condensed_data <- mapped_data %>%
+  group_by(AOI_lable, trialNumber, word) %>%
+  summarize(gazeEventDuration = sum(pointGazeDuration),
+    totalTrialDuration = first(totalTrialDuration),
+    firstPointGazeOnsetTime = first(pointGazeOnsetTime),
+    lastPointGazeOffsetTime = last(pointGazeOffsetTime),
+    targetNumber = first(targetNumber),
+    delayDuration = first(delayDuration), 
+    trialOnset = first(trialOnset),
+    trialOffset = first(trialOffset),
+    wordOnset = first(pointGazeOnsetTime),
+    wordOffset = last(pointGazeOffsetTime),
+    
+    )
+View(condensed_data)
+# Save the condensed data
+write_csv(condensed_data, "condensed_gaze_data_11_14.csv")
+
+```
+
+
+
+```{r}
+# Function to Analyze Cleaned Data
+analyze_cleaned_data <- function(filename) {
+
+df <- read.csv(filename)
+
+df <- df[order(df$trialNumber, df$firstPointGazeOnsetTime), ] # Sort the data
+cum_duration <- df$gazeEventDuration
+
+View(df)
+
+# Group the data to get one targetNumber per trialNumber
+label_data <- df[!duplicated(df$trialNumber), ]
+
+# Colors for each category
+colors <- c("l" = "green", "r" = "red", "m" = "blue", "n" = "cyan", "i" = "magenta")
+
+# Plot the data using ggplot2
+p <- ggplot(df, aes(ymin=trialNumber - 0.4, ymax=trialNumber + 0.4, xmin=cum_duration, xmax=cum_duration + gazeDuration, fill=POI_lable)) +
+  geom_rect() +
+  geom_text(data = label_data, aes(x = max(df$cum_duration + df$gazeDuration) + 500, y = trialNumber, label = targetNumber), hjust = 0) +  # Adjust the 500 value as needed
+  scale_fill_manual(values=colors) +
+  labs(x="Time", y="Trial Number", fill="Categories") +
+  theme_minimal()
+
+print(p)
+}
+
+# Get List of All CSV Files in the datavyuExports Directory
+all_files <- list.files(path="datavyuExports", pattern="*.csv", full.names=TRUE)
+
+print(all_files)
+
+
+# Loop Over Each File, Clean and Then Analyze
+for(file in all_files) {
+  
+  # Clean data
+  clean_data_file(file)
+  
+  # Construct the filename for cleaned data
+  cleaned_filename <- paste0("cleanedFiles/cleaned_", basename(file))
+  
+  # Analyze cleaned data
+  analyze_cleaned_data(cleaned_filename)
+  
+}
+
+# Process the first file
+file1 <- all_files[1]
+clean_data_file(file)
+
+# If the above runs without errors, process the second file
+file2 <- all_files[2]
+clean_data_file(file)
+
+```
